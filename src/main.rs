@@ -14,6 +14,8 @@
 // */
 mod win32;
 
+use std::ffi::CString;
+
 use windows::{
     core::PCWSTR,
     Win32::Graphics::Gdi::{
@@ -23,9 +25,7 @@ use windows::{
     },
 };
 
-use crate::win32::{
-    get_display_device, get_display_settings, get_display_x_y_position, set_display_settings,
-};
+use crate::win32::{get_display_device, get_display_settings, get_display_x_y_position};
 
 fn main() {
     let args = std::env::args().collect::<Vec<_>>();
@@ -34,7 +34,7 @@ fn main() {
         if args.get(1).map_or(false, |a| a == "/L") {
             list_displays();
         } else {
-            set_positions(args);
+            set_positions(&args);
         }
     } else {
         println!("Help");
@@ -64,33 +64,35 @@ fn main() {
     }
 }
 
-fn set_positions(args: Vec<String>) {
+fn set_positions(args: &[String]) {
     for chunk in args[1..].chunks_exact(3) {
         let display_index = chunk[0].parse::<u32>().unwrap() - 1;
         let x_pos = chunk[1].parse().unwrap();
         let y_pos = chunk[2].parse().unwrap();
+
         println!("Applying position {{{x_pos}, {y_pos}}} to Display #{display_index}...");
 
-        if let Some(dm_info) = get_display_device(display_index) {
-            if let Some(mut dev_mode) = get_display_settings(PCWSTR(dm_info.DeviceName.as_ptr())) {
-                dev_mode.dmFields = DM_POSITION as u32;
-                dev_mode.Anonymous1.Anonymous2.dmPosition.x = x_pos;
-                dev_mode.Anonymous1.Anonymous2.dmPosition.y = y_pos;
-
-                if set_display_settings(PCWSTR(dm_info.DeviceName.as_ptr()), &dev_mode) {
-                    println!("Done!");
-                } else {
-                    println!(
-                        "Operation failed! Unable to write to display settings.\nSkipping...\n"
-                    );
-                }
-            } else {
-                println!("Operation failed! Unable to read display settings.\nSkipping...\n");
-            }
-        } else {
-            println!("Operation failed! Unable to connect to display.\nSkipping...\n");
+        match set_display_settings(display_index, x_pos, y_pos) {
+            Err(e) => println!("{e}"),
+            _ => println!("Done!"),
         }
     }
+}
+
+fn set_display_settings(display_index: u32, x_pos: i32, y_pos: i32) -> Result<(), &'static str> {
+    let dm_info = get_display_device(display_index)
+        .ok_or("Operation failed! Unable to connect to display.\nSkipping...\n")?;
+
+    let mut dev_mode = get_display_settings(PCWSTR(dm_info.DeviceName.as_ptr()))
+        .ok_or("Operation failed! Unable to read display settings.\nSkipping...\n")?;
+
+    dev_mode.dmFields = DM_POSITION as u32;
+    dev_mode.Anonymous1.Anonymous2.dmPosition.x = x_pos;
+    dev_mode.Anonymous1.Anonymous2.dmPosition.y = y_pos;
+
+    win32::set_display_settings(PCWSTR(dm_info.DeviceName.as_ptr()), &dev_mode)
+        .then_some(())
+        .ok_or("Operation failed! Unable to write to display settings.\nSkipping...\n")
 }
 
 fn list_displays() {
