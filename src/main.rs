@@ -14,8 +14,6 @@
 // */
 mod win32;
 
-use std::ffi::CString;
-
 use windows::{
     core::PCWSTR,
     Win32::Graphics::Gdi::{
@@ -73,7 +71,7 @@ fn set_positions(args: &[String]) {
         println!("Applying position {{{x_pos}, {y_pos}}} to Display #{display_index}...");
 
         match set_display_settings(display_index, x_pos, y_pos) {
-            Err(e) => println!("{e}"),
+            Err(e) => println!("{e}\nSkipping...\n"),
             _ => println!("Done!"),
         }
     }
@@ -81,10 +79,10 @@ fn set_positions(args: &[String]) {
 
 fn set_display_settings(display_index: u32, x_pos: i32, y_pos: i32) -> Result<(), &'static str> {
     let dm_info = get_display_device(display_index)
-        .ok_or("Operation failed! Unable to connect to display.\nSkipping...\n")?;
+        .ok_or("Operation failed! Unable to connect to display.")?;
 
     let mut dev_mode = get_display_settings(PCWSTR(dm_info.DeviceName.as_ptr()))
-        .ok_or("Operation failed! Unable to read display settings.\nSkipping...\n")?;
+        .ok_or("Operation failed! Unable to read display settings.")?;
 
     dev_mode.dmFields = DM_POSITION as u32;
     dev_mode.Anonymous1.Anonymous2.dmPosition.x = x_pos;
@@ -92,7 +90,7 @@ fn set_display_settings(display_index: u32, x_pos: i32, y_pos: i32) -> Result<()
 
     win32::set_display_settings(PCWSTR(dm_info.DeviceName.as_ptr()), &dev_mode)
         .then_some(())
-        .ok_or("Operation failed! Unable to write to display settings.\nSkipping...\n")
+        .ok_or("Operation failed! Unable to write to display settings.")
 }
 
 fn list_displays() {
