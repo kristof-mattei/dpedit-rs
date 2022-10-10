@@ -81,8 +81,8 @@ jobs:
       - name: Set up toolchain
         shell: pwsh
         run: |
-          rm ${HOME}/.cargo/bin/rustfmt
-          rm ${HOME}/.cargo/bin/cargo-fmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt
           rustup update
 
           cargo --version
@@ -146,8 +146,8 @@ jobs:
       - name: Set up toolchain
         shell: pwsh
         run: |
-          rm ${HOME}/.cargo/bin/rustfmt
-          rm ${HOME}/.cargo/bin/cargo-fmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt
           rustup update
 
           cargo --version
@@ -184,8 +184,8 @@ jobs:
       - name: Set up toolchain
         shell: pwsh
         run: |
-          rm ${HOME}/.cargo/bin/rustfmt
-          rm ${HOME}/.cargo/bin/cargo-fmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt
           rustup update
 
           cargo --version
@@ -222,8 +222,8 @@ jobs:
       - name: Set up toolchain
         shell: pwsh
         run: |
-          rm ${HOME}/.cargo/bin/rustfmt
-          rm ${HOME}/.cargo/bin/cargo-fmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt
           rustup update
 
           cargo --version
@@ -344,8 +344,8 @@ jobs:
       - name: Set up toolchain
         shell: pwsh
         run: |
-          rm ${HOME}/.cargo/bin/rustfmt
-          rm ${HOME}/.cargo/bin/cargo-fmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt
           rustup update
 
           cargo --version
