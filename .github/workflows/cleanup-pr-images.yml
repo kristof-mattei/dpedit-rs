@@ -29,11 +29,11 @@ concurrency:
 jobs:
   cleanup:
     name: Cleanup
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: ${{ github.event.pull_request.merged == false }}
     steps:
       - name: Void
-        shell: bash
+        shell: pwsh
         run: |
           echo "TODO put code here that cleans up images tagged pr-${{ github.event.number }}-latest"
 

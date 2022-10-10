@@ -23,36 +23,36 @@ permissions:
 jobs:
   release:
     name: Release
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Only on main
         if: ${{ github.ref != 'refs/heads/main' }}
-        shell: bash
+        shell: pwsh
         run: |
           echo "Only to be executed on main"
           exit 1
 
       - name: Checkout
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3.0.2
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
         with:
           token: ${{ secrets.TOKEN_TO_TRIGGER_SUBSEQUENT_WORKFLOWS }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93 # tag=v3.4.1
+        uses: actions/setup-node@969bd2663942d722d85b6a8626225850c2f7be4b # tag=v3.5.0
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
           cache-dependency-path: "**/package-lock.json"
 
       - name: Install dependencies
-        shell: bash
+        shell: pwsh
         run: |
           npm ci --ignore-scripts
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_TO_TRIGGER_SUBSEQUENT_WORKFLOWS }}
-        shell: bash
+        shell: pwsh
         run: |
           # TODO this release file produces a
           # changelog
