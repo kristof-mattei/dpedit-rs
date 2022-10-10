@@ -32,7 +32,7 @@ permissions:
 jobs:
   retag-containers:
     name: Retag the containers
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
@@ -40,7 +40,7 @@ jobs:
           fetch-depth: 2
 
       - name: Find out if current commit is a merge
-        shell: bash
+        shell: pwsh
         run: |
           EXIT_CODE=0
           # a commit always has a parent, but if it has 2, the commit is a merge
@@ -65,7 +65,7 @@ jobs:
           cache-dependency-path: "**/package-lock.json"
 
       - name: Install dependencies
-        shell: bash
+        shell: pwsh
         run: |
           npm ci --ignore-scripts
 
@@ -99,12 +99,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set full image name
-        shell: bash
+        shell: pwsh
         run: |
           echo "FULL_IMAGE_NAME=${REGISTRY,,}/${IMAGE_NAME,,}" >> ${GITHUB_ENV}
 
       - name: Find all tags for ${{ env.FULL_IMAGE_NAME }}
-        shell: bash
+        shell: pwsh
         run: |
           crane ls ${FULL_IMAGE_NAME} >> existing_tags
 
@@ -114,7 +114,7 @@ jobs:
       - name: Check if the incoming PR has a Docker container, which will be our old tag, if not, or if it's just a push, find the appropriate old tag
         env:
           PR_TAG: "pr-${{ github.event.before }}-${{ env.INCOMING_PR_HEAD_COMMIT }}"
-        shell: bash
+        shell: pwsh
         run: |
           # search for the tag, there can only be zero or one match
           # we need the || true because otherwise grep returns exit code 1 and github actions then dies
@@ -153,7 +153,7 @@ jobs:
             type=sha,format=long,prefix=sha-,suffix=-${{ env.SUFFIX }}
 
       - name: Actually re-tag the container
-        shell: bash
+        shell: pwsh
         run: |
           echo "${{ steps.meta.outputs.tags }}" | while read new_tag
           do

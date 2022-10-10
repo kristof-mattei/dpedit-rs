@@ -7,47 +7,39 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'rust-end-to-end-application'",
+            "name": "Debug executable 'dpedit-rs'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=rust-end-to-end-application",
-                    "--package=rust-end-to-end-application"
+                    "--bin=dpedit-rs",
+                    "--package=dpedit-rs"
                 ],
                 "filter": {
-                    "name": "rust-end-to-end-application",
+                    "name": "dpedit-rs",
                     "kind": "bin"
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "RUST_BACKTRACE": "1",
-                "RUST_LOG": "rust_end_to_end_application=trace"
-            }
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'rust-end-to-end-application'",
+            "name": "Debug unit tests in executable 'dpedit-rs'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=rust-end-to-end-application",
-                    "--package=rust-end-to-end-application"
+                    "--bin=dpedit-rs",
+                    "--package=dpedit-rs"
                 ],
                 "filter": {
-                    "name": "rust-end-to-end-application",
+                    "name": "dpedit-rs",
                     "kind": "bin"
                 }
             },
             "args": [],
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "RUST_BACKTRACE": "1",
-                "RUST_LOG": "rust_end_to_end_application=trace"
-            }
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

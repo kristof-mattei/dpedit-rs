@@ -36,7 +36,7 @@ concurrency:
 jobs:
   changes:
     name: Detect changes
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
@@ -52,7 +52,7 @@ jobs:
 
   calculate-version:
     name: Calculate version
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs:
       - changes
     outputs:
@@ -79,7 +79,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
 
       - name: Set up toolchain
-        shell: bash
+        shell: pwsh
         run: |
           rm ${HOME}/.cargo/bin/rustfmt
           rm ${HOME}/.cargo/bin/cargo-fmt
@@ -88,7 +88,7 @@ jobs:
           cargo --version
 
       - name: Get binstall
-        shell: bash
+        shell: pwsh
         run: |
           cd /tmp
           archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
@@ -101,13 +101,13 @@ jobs:
           mv ./cargo-binstall ~/.cargo/bin/
 
       - name: Install cocogitto to get the next version number
-        shell: bash
+        shell: pwsh
         run: |
           cargo binstall --no-confirm cocogitto --target x86_64-unknown-linux-musl --pkg-url "{ repo }/releases/download/{ version }/{ name }-{ version }-{ target }.tar.gz" --bin-dir "{ bin }" --pkg-fmt tgz
 
       - name: Calculate next version
         id: version
-        shell: bash
+        shell: pwsh
         run: |
 
           # no dry run yet, so fake it until we make it
@@ -121,7 +121,7 @@ jobs:
 
   cargo-build:
     name: Cargo build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs:
       - changes
     if: |
@@ -144,7 +144,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
 
       - name: Set up toolchain
-        shell: bash
+        shell: pwsh
         run: |
           rm ${HOME}/.cargo/bin/rustfmt
           rm ${HOME}/.cargo/bin/cargo-fmt
@@ -153,13 +153,13 @@ jobs:
           cargo --version
 
       - name: Build
-        shell: bash
+        shell: pwsh
         run: |
           cargo build --all-targets --workspace --verbose
 
   cargo-fmt:
     name: Cargo fmt
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs:
       - changes
     if: |
@@ -182,7 +182,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
 
       - name: Set up toolchain
-        shell: bash
+        shell: pwsh
         run: |
           rm ${HOME}/.cargo/bin/rustfmt
           rm ${HOME}/.cargo/bin/cargo-fmt
@@ -191,13 +191,13 @@ jobs:
           cargo --version
 
       - name: Check formatting
-        shell: bash
+        shell: pwsh
         run: |
           cargo fmt --all -- --check --verbose
 
   cargo-test-and-report:
     name: Cargo test (and report)
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs:
       - changes
     if: |
@@ -220,7 +220,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
 
       - name: Set up toolchain
-        shell: bash
+        shell: pwsh
         run: |
           rm ${HOME}/.cargo/bin/rustfmt
           rm ${HOME}/.cargo/bin/cargo-fmt
@@ -229,12 +229,12 @@ jobs:
           cargo --version
 
       - name: Install llvm-tools-preview
-        shell: bash
+        shell: pwsh
         run: |
           rustup component add llvm-tools-preview
 
       - name: Get binstall
-        shell: bash
+        shell: pwsh
         run: |
           archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
           wget "https://github.com/ryankurte/cargo-binstall/releases/latest/download/${archive}"
@@ -246,24 +246,24 @@ jobs:
           mv ./cargo-binstall ~/.cargo/bin/
 
       - name: Install nextest, custom test runner, with native support for junit
-        shell: bash
+        shell: pwsh
         run: |
           cargo binstall --no-confirm cargo-nextest;
 
       - name: Install grcov
-        shell: bash
+        shell: pwsh
         run: |
           cargo binstall --no-confirm grcov --pkg-url "{ repo }/releases/download/v{ version }/{ name }-{ target }.tar.bz2" --pkg-fmt tbz2 --bin-dir "{ bin }";
 
       - name: Build with instrumentation support
-        shell: bash
+        shell: pwsh
         env:
           RUSTFLAGS: "-C instrument-coverage"
         run: |
           cargo build --all-targets --workspace --verbose
 
       - name: Run nextest
-        shell: bash
+        shell: pwsh
         id: tests
         env:
           RUSTFLAGS: "-C instrument-coverage"
@@ -280,7 +280,7 @@ jobs:
           junit_files: reports/results.xml
 
       - name: Run grcov
-        shell: bash
+        shell: pwsh
         run: |
           grcov $(find profiling -name "profile-*.profraw" -print) --source-dir . --binary-path ./target/debug/ --output-type lcov --branch --ignore-not-existing --llvm --keep-only 'src/**' --keep-only 'tests/**' --output-path ./reports/lcov.info
 
@@ -292,14 +292,14 @@ jobs:
           fail_ci_if_error: true
 
       - name: Setup Code Climate Test Reporter
-        shell: bash
+        shell: pwsh
         run: |
           # download test reporter as a static binary
           curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
           chmod +x ./cc-test-reporter
 
       - name: Run Code Climate Test Reporter
-        shell: bash
+        shell: pwsh
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
         run: |
@@ -307,7 +307,7 @@ jobs:
           ./cc-test-reporter upload-coverage --input reports/codeclimate.json
 
       - name: Fail if tests failed
-        shell: bash
+        shell: pwsh
         if: steps.tests.outcome != 'success'
         run: |
           # the test reporter we use (or any for that matter)
@@ -319,7 +319,7 @@ jobs:
 
   cargo-clippy-and-report:
     name: Cargo clippy (and report)
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs:
       - changes
     if: |
@@ -342,7 +342,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
 
       - name: Set up toolchain
-        shell: bash
+        shell: pwsh
         run: |
           rm ${HOME}/.cargo/bin/rustfmt
           rm ${HOME}/.cargo/bin/cargo-fmt
@@ -357,106 +357,106 @@ jobs:
           args: --workspace --all-targets --all-features -- --deny clippy::all --deny clippy::pedantic --deny clippy::cargo
           name: Clippy report
 
-  docker-build:
-    name: Build Docker container
-    runs-on: ubuntu-latest
-    needs:
-      - calculate-version
-    steps:
-      - name: Checkout
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+  # docker-build:
+  #   name: Build Docker container
+  #   runs-on: windows-latest
+  #   needs:
+  #     - calculate-version
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
 
-      - name: Set the Cargo.toml version before we copy in the data into the Docker container
-        shell: bash
-        run: |
-          ./.github/scripts/update-version.sh ${{ needs.calculate-version.outputs.version }}
+  #     - name: Set the Cargo.toml version before we copy in the data into the Docker container
+  #       shell: pwsh
+  #       run: |
+  #         ./.github/scripts/update-version.sh ${{ needs.calculate-version.outputs.version }}
 
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6 # tag=v2
+  #     - name: Set up Docker Buildx
+  #       id: buildx
+  #       uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6 # tag=v2
 
-      # TODO validate no changes between github.event.pull_request.head.sha and the actual current sha (representing the hypothetical merge)
+  #     # TODO validate no changes between github.event.pull_request.head.sha and the actual current sha (representing the hypothetical merge)
 
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@69f6fc9d46f2f8bf0d5491e4aabe0bb8c6a4678a # tag=v4.0.1
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=pr,suffix=-latest
-            type=raw,value=pr-${{ github.event.pull_request.base.sha }}-${{ github.event.pull_request.head.sha }}
-          labels: |
-            org.opencontainers.image.version=pr-${{ github.event.number }}
-            org.opencontainers.image.source=${{ github.event.pull_request.html_url }}
+  #     # Extract metadata (tags, labels) for Docker
+  #     # https://github.com/docker/metadata-action
+  #     - name: Extract Docker metadata
+  #       id: meta
+  #       uses: docker/metadata-action@69f6fc9d46f2f8bf0d5491e4aabe0bb8c6a4678a # tag=v4.0.1
+  #       with:
+  #         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+  #         tags: |
+  #           type=ref,event=pr,suffix=-latest
+  #           type=raw,value=pr-${{ github.event.pull_request.base.sha }}-${{ github.event.pull_request.head.sha }}
+  #         labels: |
+  #           org.opencontainers.image.version=pr-${{ github.event.number }}
+  #           org.opencontainers.image.source=${{ github.event.pull_request.html_url }}
 
-      - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b # tag=v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Log into registry ${{ env.REGISTRY }}
+  #       uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b # tag=v2
+  #       with:
+  #         registry: ${{ env.REGISTRY }}
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Lowercase the image name
-        shell: bash
-        run: |
-          echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
+  #     - name: Lowercase the image name
+  #       shell: pwsh
+  #       run: |
+  #         echo "IMAGE_NAME=${IMAGE_NAME,,}" >> ${GITHUB_ENV}
 
-      - name: Build Docker image
-        uses: docker/build-push-action@c84f38281176d4c9cdb1626ffafcd6b3911b5d94 # tag=v3.1.1
-        with:
-          context: .
-          # this container is THE PR's artifact, and we will re-tag it
-          # once the PR has been accepted
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
-          outputs: type=docker,dest=${{ env.DOCKER_IMAGE_TAR_LOCATION }}
+  #     - name: Build Docker image
+  #       uses: docker/build-push-action@c84f38281176d4c9cdb1626ffafcd6b3911b5d94 # tag=v3.1.1
+  #       with:
+  #         context: .
+  #         # this container is THE PR's artifact, and we will re-tag it
+  #         # once the PR has been accepted
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+  #         cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+  #         outputs: type=docker,dest=${{ env.DOCKER_IMAGE_TAR_LOCATION }}
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
-        with:
-          name: ${{ env.DOCKER_IMAGE_ARTIFACT_NAME }}
-          path: ${{ env.DOCKER_IMAGE_TAR_LOCATION }}
+  #     - name: Upload artifact
+  #       uses: actions/upload-artifact@3cea5372237819ed00197afe530f5a7ea3e805c8 # tag=v3.1.0
+  #       with:
+  #         name: ${{ env.DOCKER_IMAGE_ARTIFACT_NAME }}
+  #         path: ${{ env.DOCKER_IMAGE_TAR_LOCATION }}
 
-  docker-publish:
-    name: Publish Docker container
-    runs-on: ubuntu-latest
-    needs:
-      - cargo-build
-      - cargo-fmt
-      - cargo-test-and-report
-      - cargo-clippy-and-report
-      - docker-build
-    if: ${{ github.repository == 'kristof-mattei/rust-end-to-end-application' && github.event_name == 'pull_request' }}
-    steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6 # tag=v2
+  # docker-publish:
+  #   name: Publish Docker container
+  #   runs-on: windows-latest
+  #   needs:
+  #     - cargo-build
+  #     - cargo-fmt
+  #     - cargo-test-and-report
+  #     - cargo-clippy-and-report
+  #     - docker-build
+  #   if: ${{ github.repository == 'kristof-mattei/rust-end-to-end-application' && github.event_name == 'pull_request' }}
+  #   steps:
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6 # tag=v2
 
-      - name: Download artifact
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3
-        with:
-          name: ${{ env.DOCKER_IMAGE_ARTIFACT_NAME }}
-          path: ${{ env.DOCKER_IMAGE_OUTPUT_LOCATION }}
+  #     - name: Download artifact
+  #       uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3
+  #       with:
+  #         name: ${{ env.DOCKER_IMAGE_ARTIFACT_NAME }}
+  #         path: ${{ env.DOCKER_IMAGE_OUTPUT_LOCATION }}
 
-      - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b # tag=v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Log into registry ${{ env.REGISTRY }}
+  #       uses: docker/login-action@49ed152c8eca782a232dede0303416e8f356c37b # tag=v2
+  #       with:
+  #         registry: ${{ env.REGISTRY }}
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Load image from artifact
-        shell: bash
-        run: |
-          docker load --input ${{ env.DOCKER_IMAGE_TAR_LOCATION }}
+  #     - name: Load image from artifact
+  #       shell: pwsh
+  #       run: |
+  #         docker load --input ${{ env.DOCKER_IMAGE_TAR_LOCATION }}
 
-      - name: Push image with all tags
-        shell: bash
-        run: |
-          docker push ${REGISTRY,,}/${IMAGE_NAME,,} --all-tags
+  #     - name: Push image with all tags
+  #       shell: pwsh
+  #       run: |
+  #         docker push ${REGISTRY,,}/${IMAGE_NAME,,} --all-tags
 
   all-done:
     name: All done
@@ -465,19 +465,19 @@ jobs:
     # when all upstream skips: pass
     # when all upstream success: success
     # combination of upstream skip and success: success
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs:
       - calculate-version
       - cargo-build
       - cargo-fmt
       - cargo-clippy-and-report
       - cargo-test-and-report
-      - docker-build
-      - docker-publish
+      # - docker-build
+      # - docker-publish
     if: ${{ always() }}
     steps:
       - name: Fail!
-        shell: bash
+        shell: pwsh
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         run: |
           echo "One / more upstream failed or was cancelled. Failing job..."
@@ -485,6 +485,6 @@ jobs:
           exit 1
 
       - name: Success!
-        shell: bash
+        shell: pwsh
         run: |
           echo "Great success!"
