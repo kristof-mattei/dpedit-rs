@@ -124,7 +124,7 @@ jobs:
 
           Remove-Item -ErrorAction SilentlyContinue "./${archive}"
 
-          mv ./cargo-binstall ~/.cargo/bin/
+          Move-Item ./cargo-binstall.exe ~/.cargo/bin/
 
       - name: Install cocogitto to get the next version number
         shell: pwsh
@@ -315,7 +315,7 @@ jobs:
 
           Remove-Item -ErrorAction SilentlyContinue "./${archive}"
 
-          mv ./cargo-binstall ~/.cargo/bin/
+          Move-Item ./cargo-binstall.exe ~/.cargo/bin/
 
       - name: Install nextest, custom test runner, with native support for junit
         shell: pwsh
@@ -492,7 +492,7 @@ jobs:
 
           Remove-Item -ErrorAction SilentlyContinue "./${archive}"
 
-          mv ./cargo-binstall ~/.cargo/bin/
+          Move-Item ./cargo-binstall.exe ~/.cargo/bin/
 
       - name: Install cargo-edit to do set-version
         shell: pwsh

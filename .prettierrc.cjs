@@ -11,6 +11,7 @@ const prettierConfig = {
     useTabs: false,
     tabWidth: 4,
     trailingComma: "all",
+    endOfLine: "lf",
     overrides: [
         {
             files: ["*.ts", "*.tsx"],

@@ -83,7 +83,7 @@ jobs:
 
           Remove-Item -ErrorAction SilentlyContinue "./${archive}"
 
-          mv ./cargo-binstall ~/.cargo/bin/
+          Move-Item ./cargo-binstall.exe ~/.cargo/bin/
 
       - name: Install binstall to do set-version
         shell: pwsh
