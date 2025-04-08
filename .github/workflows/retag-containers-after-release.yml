@@ -31,7 +31,7 @@ jobs:
         id: determine
         shell: pwsh
         run: |
-          HAS_CONTAINER="${{ vars.HAS_CONTAINER }}"
+          $HAS_CONTAINER="${{ vars.HAS_CONTAINER }}"
           echo "has_container=${HAS_CONTAINER:-false}" >> ${GITHUB_OUTPUT}
 
   retag-containers:

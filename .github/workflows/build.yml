@@ -43,7 +43,7 @@ jobs:
         shell: pwsh
         id: determine
         run: |
-          HAS_CONTAINER="${{ vars.HAS_CONTAINER }}"
+          $HAS_CONTAINER="${{ vars.HAS_CONTAINER }}"
           echo "has_container=${HAS_CONTAINER:-false}" >> ${GITHUB_OUTPUT}
 
   changes:
@@ -117,10 +117,10 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.TEMP }}
         run: |
-          archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
-          wget "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
+          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
 
-          tar -xvf "./${archive}"
+          Expand-Archive  "./${archive}"
 
           rm "./${archive}"
 
@@ -308,10 +308,10 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.TEMP }}
         run: |
-          archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
-          wget "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
+          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
 
-          tar -xvf "./${archive}"
+          Expand-Archive  "./${archive}"
 
           rm "./${archive}"
 
@@ -485,10 +485,10 @@ jobs:
         shell: pwsh
         working-directory: ${{ env.TEMP }}
         run: |
-          archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
-          wget "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
+          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
 
-          tar -xvf "./${archive}"
+          Expand-Archive  "./${archive}"
 
           rm "./${archive}"
 
@@ -543,7 +543,7 @@ jobs:
       - name: Set application name
         shell: pwsh
         run: |
-          APPLICATION_NAME=${{ github.repository }}
+          $APPLICATION_NAME=${{ github.repository }}
           echo "APPLICATION_NAME=${APPLICATION_NAME##*/}" >> ${GITHUB_ENV}
 
       - name: Build Docker image
