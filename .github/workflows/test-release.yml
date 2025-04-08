@@ -49,9 +49,9 @@ jobs:
       - name: Set up toolchain
         shell: pwsh
         run: |
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rust-analyzer
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt.exe
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rust-analyzer.exe
+          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt.exe
 
           rustup self update
           rustup update
