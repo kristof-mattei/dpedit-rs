@@ -1,41 +1,89 @@
-FROM rust:1.64.0@sha256:922d814994d77f8e3ab8a7db45a277e9cebe41a557046eeef91a2e34b28b4962 as builder
+FROM --platform=${BUILDPLATFORM} rust:1.86.0@sha256:6a6dda669f020fa1fcb0903e37a049484fbf4b4699c8cb89db26ca030f475259 AS rust-base
 
-ENV TARGET=x86_64-unknown-linux-musl
-RUN rustup target add ${TARGET}
+ARG APPLICATION_NAME
 
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN rm -f /etc/apt/apt.conf.d/docker-clean \
+    && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
 # borrowed (Ba Dum Tss!) from
 # https://github.com/pablodeymo/rust-musl-builder/blob/7a7ea3e909b1ef00c177d9eeac32d8c9d7d6a08c/Dockerfile#L48-L49
-RUN --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt \
-    apt-get update && \
-    apt-get --no-install-recommends install -y \
-    build-essential \
-    musl-dev \
-    musl-tools
+RUN --mount=type=cache,id=apt-cache-amd64,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=apt-lib-amd64,target=/var/lib/apt,sharing=locked \
+    apt-get update \
+    && apt-get --no-install-recommends install --yes \
+        build-essential \
+        musl-dev \
+        musl-tools
+
+FROM rust-base AS rust-linux-amd64
+ARG TARGET=x86_64-unknown-linux-musl
+
+FROM rust-base AS rust-linux-arm64
+ARG TARGET=aarch64-unknown-linux-musl
+RUN --mount=type=cache,id=apt-cache-arm64,from=rust-base,source=/var/cache/apt,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=apt-lib-arm64,from=rust-base,source=/var/lib/apt,target=/var/lib/apt,sharing=locked \
+    dpkg --add-architecture arm64 \
+    && apt-get update \
+    && apt-get --no-install-recommends install --yes \
+        libc6-dev-arm64-cross \
+        gcc-aarch64-linux-gnu
+
+FROM rust-${TARGETPLATFORM//\//-} AS rust-cargo-build
+
+RUN rustup target add ${TARGET} && rustup component add clippy rustfmt
 
 # The following block
 # creates an empty app, and we copy in Cargo.toml and Cargo.lock as they represent our dependencies
 # This allows us to copy in the source in a different layer which in turn allows us to leverage Docker's layer caching
 # That means that if our dependencies don't change rebuilding is much faster
 WORKDIR /build
-RUN cargo new rust-end-to-end-application
-WORKDIR /build/rust-end-to-end-application
+RUN cargo new ${APPLICATION_NAME}
+WORKDIR /build/${APPLICATION_NAME}
+COPY .cargo ./.cargo
 COPY Cargo.toml Cargo.lock ./
-RUN --mount=type=cache,target=/build/rust-end-to-end-application/target \
+
+RUN --mount=type=cache,target=/build/${APPLICATION_NAME}/target \
+    --mount=type=cache,id=cargo-git,target=/usr/local/cargo/git/db,sharing=locked \
+    --mount=type=cache,id=cargo-registery,target=/usr/local/cargo/registry/,sharing=locked \
     cargo build --release --target ${TARGET}
+
+FROM rust-cargo-build AS rust-build
+
+WORKDIR /build/${APPLICATION_NAME}
 
 # now we copy in the source which is more prone to changes and build it
 COPY src ./src
+
+# ensure cargo picks up on the change
+RUN touch ./src/main.rs
+
 # --release not needed, it is implied with install
-RUN --mount=type=cache,target=/build/rust-end-to-end-application/target \
+RUN --mount=type=cache,target=/build/${APPLICATION_NAME}/target \
+    --mount=type=cache,id=cargo-git,target=/usr/local/cargo/git/db,sharing=locked \
+    --mount=type=cache,id=cargo-registery,target=/usr/local/cargo/registry/,sharing=locked \
     cargo install --path . --target ${TARGET} --root /output
 
-FROM alpine:3.16.2@sha256:bc41182d7ef5ffc53a40b044e725193bc10142a1243f395ee852a8d9730fc2ad
+FROM alpine:3.21.3@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c AS passwd-build
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# setting `--system` prevents prompting for a password
+RUN addgroup --gid 900 appgroup \
+    && adduser --ingroup appgroup --uid 900 --system --shell /bin/false appuser
+
+RUN cat /etc/group | grep appuser > /tmp/group_appuser
+RUN cat /etc/passwd | grep appuser > /tmp/passwd_appuser
+
+FROM scratch
+
+ARG APPLICATION_NAME
+
+COPY --from=passwd-build /tmp/group_appuser /etc/group
+COPY --from=passwd-build /tmp/passwd_appuser /etc/passwd
+
 USER appuser
 
 WORKDIR /app
-COPY --from=builder /output/bin/rust-end-to-end-application /app
-ENTRYPOINT ["/app/rust-end-to-end-application"]
+
+COPY --from=rust-build /output/bin/${APPLICATION_NAME} /app/entrypoint
+
+ENV RUST_BACKTRACE=full
+ENTRYPOINT ["/app/entrypoint"]

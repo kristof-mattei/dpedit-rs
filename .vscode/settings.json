@@ -1,12 +1,14 @@
 {
-    "search.exclude": {
-        "**/node_modules": true,
-        "**/bower_components": true,
-        "**/*.code-search": true,
-        "**/target": true,
+    "debug.internalConsoleOptions": "openOnSessionStart",
+    "prettier.configPath": "./.prettierrc.cjs",
+    "rust-analyzer.debug.engineSettings": {
+        "lldb": {
+            "internalConsoleOptions": "openOnSessionStart",
+            "terminal": "console"
+        }
     },
-    "editor.renderFinalNewline": true,
-    "editor.trimAutoWhitespace": true,
-    "files.insertFinalNewline": true,
-    "files.trimTrailingWhitespace": true,
+    "rust-analyzer.debug.openDebugPane": true,
+    "rust-analyzer.runnables.extraEnv": {
+        "RUST_LOG": "DEBUG,dpedit_rs=TRACE"
+    }
 }

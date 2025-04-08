@@ -1,28 +1,26 @@
-name: Lint Yaml
+name: Prettier
 
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-    paths:
-      - "**/*.yml"
-      - "**/*.yaml"
   pull_request:
-    paths:
-      - "**/*.yml"
-      - "**/*.yaml"
+    branches:
+      - main
 
 jobs:
-  lint:
-    name: Lint
+  prettier:
+    name: Prettier
     runs-on: windows-latest
     steps:
-      - name: Check out repo
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3.1.0
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          show-progress: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@969bd2663942d722d85b6a8626225850c2f7be4b # tag=v3.5.0
+        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
@@ -33,7 +31,7 @@ jobs:
         run: |
           npm ci --ignore-scripts
 
-      - name: Run linter
+      - name: Run Prettier
         shell: pwsh
         run: |
-          npx --no-install prettier -c "**/*.{yml,yaml}"
+          npx --no-install prettier --check .

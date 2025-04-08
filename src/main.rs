@@ -14,14 +14,12 @@
 // */
 mod win32;
 
-use windows::{
-    core::PCWSTR,
-    Win32::Graphics::Gdi::{
-        DISPLAY_DEVICE_ACTIVE, DISPLAY_DEVICE_MIRRORING_DRIVER, DISPLAY_DEVICE_MODESPRUNED,
-        DISPLAY_DEVICE_PRIMARY_DEVICE, DISPLAY_DEVICE_REMOVABLE, DISPLAY_DEVICE_VGA_COMPATIBLE,
-        DM_POSITION,
-    },
+use windows::Win32::Graphics::Gdi::{
+    DISPLAY_DEVICE_ACTIVE, DISPLAY_DEVICE_MIRRORING_DRIVER, DISPLAY_DEVICE_MODESPRUNED,
+    DISPLAY_DEVICE_PRIMARY_DEVICE, DISPLAY_DEVICE_REMOVABLE, DISPLAY_DEVICE_VGA_COMPATIBLE,
+    DM_POSITION,
 };
+use windows::core::PCWSTR;
 
 use crate::win32::{get_display_device, get_display_settings, get_display_x_y_position};
 
@@ -48,13 +46,19 @@ fn main() {
         println!("  Options:\n");
         println!("  /L              Lists all displays and their indices");
         println!("  <displayNum>    The index of the display to position");
-        println!( "  <xPos>          The X (horizontal) position of the top-left corner of display <displayNum>." );
-        println!( "  <YPos>          The Y (vertical) position of the top-left corner of display <displayNum>.\n");
+        println!(
+            "  <xPos>          The X (horizontal) position of the top-left corner of display <displayNum>."
+        );
+        println!(
+            "  <YPos>          The Y (vertical) position of the top-left corner of display <displayNum>.\n"
+        );
         println!("Example: dpedit.exe 1 0 0 2 -1920 21");
         println!(
             "         Moves Display #1 to coords {{0, 0}} and positions Display #2 to the left of"
         );
-        println!( "         and 21 pixels lower than Display #1 (coords {{-1920, 21}}). This example assumes" );
+        println!(
+            "         and 21 pixels lower than Display #1 (coords {{-1920, 21}}). This example assumes"
+        );
         println!("         Display #2 to be 1080p.\n");
         println!("Notes: This utility should work for any number and any size(s) of monitors.");
         println!("       The display numbers do not need to be in order.\n");

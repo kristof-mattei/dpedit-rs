@@ -1,27 +1,46 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: Lint commits
+name: Publish crate
 
-on:
-  pull_request:
-    branches:
-      - main
+env: {}
 
 concurrency:
-  # each new commit to a PR runs this workflow
-  # so we need to avoid a long running older one from overwriting the 'pr-<number>-latest'
-  group: "${{ github.workflow }} @ ${{ github.ref_name }}"
-  cancel-in-progress: true
+  group: "${{ github.workflow }}"
+  cancel-in-progress: false # last one must win in case of multiple releases
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
 
 jobs:
-  lint:
-    name: Lint
+  repo-has-crate:
+    name: Repo publishes crate?
     runs-on: windows-latest
+    outputs:
+      has_crate: ${{ steps.determine.outputs.has_crate }}
+
+    steps:
+      - name: Repo has crate?
+        id: determine
+        shell: pwsh
+        run: |
+          HAS_CRATE="${{ vars.HAS_CRATE }}"
+          echo "has_crate=${HAS_CRATE:-false}" >> ${GITHUB_OUTPUT}
+
+  publish-crate:
+    name: Publish crate
+    runs-on: windows-latest
+    needs:
+      - repo-has-crate
+    if: |
+      fromJSON(needs.repo-has-crate.outputs.has_crate) == true
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           show-progress: false
-          fetch-depth: 0
 
       - name: Cache dependencies
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
@@ -31,10 +50,13 @@ jobs:
           path: |
             ~/.cargo
             ./target
-          key: ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-cocogitto
+          key: ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-test
           restore-keys: |
             ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
             ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
+
+      - name: Set up mold
+        uses: rui314/setup-mold@e16410e7f8d9e167b74ad5697a9089a35126eb50 # v1
 
       - name: Set up toolchain
         shell: pwsh
@@ -63,12 +85,29 @@ jobs:
 
           mv ./cargo-binstall ~/.cargo/bin/
 
-      - name: Install cocogitto to get the next version number
+      - name: Install binstall to do set-version
         shell: pwsh
         run: |
-          cargo binstall --no-confirm cocogitto --target x86_64-unknown-linux-musl --pkg-url "{ repo }/releases/download/{ version }/{ name }-{ version }-{ target }.tar.gz" --bin-dir "{ bin }" --pkg-fmt tgz
+          cargo binstall cargo-edit
 
-      - name: Check the commits
+      - name: Set version in Cargo.toml / Cargo.lock
         shell: pwsh
+        id: version
         run: |
-          cog check
+          VERSION="${{ github.ref_name }}"
+          # remove v
+          VERSION="${VERSION//v/}"
+
+          # store
+          cargo set-version ${VERSION}
+
+          # debug
+          cat Cargo.toml
+
+      - name: Publish
+        shell: pwsh
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          # we don't commit the version number in our codebase
+          cargo publish --allow-dirty
