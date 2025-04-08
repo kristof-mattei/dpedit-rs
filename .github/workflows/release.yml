@@ -77,7 +77,7 @@ jobs:
 
           Remove-Item -ErrorAction SilentlyContinue "./${archive}"
 
-          Move-Item ./cargo-binstall.exe ~/.cargo/bin/
+          Move-Item -Force ./cargo-binstall.exe ~/.cargo/bin/
 
       - name: Install cocogitto to get the next version number
         shell: pwsh
