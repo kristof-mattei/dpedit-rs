@@ -1,25 +1,21 @@
-use windows::{
-    core::PCWSTR,
-    Win32::{
-        Graphics::Gdi::{
-            ChangeDisplaySettingsExW, EnumDisplayDevicesW, EnumDisplaySettingsExW,
-            EnumDisplaySettingsW, CDS_GLOBAL, CDS_UPDATEREGISTRY, DEVMODEW, DISPLAY_DEVICEW,
-            DISP_CHANGE_SUCCESSFUL, ENUM_CURRENT_SETTINGS,
-        },
-        UI::WindowsAndMessaging::{EDD_GET_DEVICE_INTERFACE_NAME, EDS_RAWMODE},
-    },
-};
-
 use std::mem::size_of;
+
+use windows::Win32::Graphics::Gdi::{
+    CDS_GLOBAL, CDS_UPDATEREGISTRY, ChangeDisplaySettingsExW, DEVMODEW, DISP_CHANGE_SUCCESSFUL,
+    DISPLAY_DEVICEW, EDS_RAWMODE, ENUM_CURRENT_SETTINGS, EnumDisplayDevicesW,
+    EnumDisplaySettingsExW, EnumDisplaySettingsW,
+};
+use windows::Win32::UI::WindowsAndMessaging::EDD_GET_DEVICE_INTERFACE_NAME;
+use windows::core::PCWSTR;
 
 pub(crate) fn set_display_settings(display_device_name: PCWSTR, dev_mode: &DEVMODEW) -> bool {
     unsafe {
         ChangeDisplaySettingsExW(
             display_device_name,
-            dev_mode,
+            Some(dev_mode),
             None,
             CDS_GLOBAL | CDS_UPDATEREGISTRY,
-            std::ptr::null(),
+            None,
         ) == DISP_CHANGE_SUCCESSFUL
     }
 }

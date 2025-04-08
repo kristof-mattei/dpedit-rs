@@ -1,37 +1,29 @@
 {
-  "name": "rust-end-to-end-application",
+  "name": "dpedit-rs",
   "version": "0.0.0-development",
   "description": "It's written in Rust!",
   "main": "src/main.rs",
   "scripts": {
-    "prettier": "prettier -w \"**/*.{yml,yaml}\"",
+    "format": "prettier --write .",
     "release": "semantic-release"
   },
   "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=22.14.0",
+    "npm": ">=11.2.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kristof-mattei/rust-end-to-end-application.git"
+    "url": "https://github.com/kristof-mattei/dpedit-rs.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/kristof-mattei/rust-end-to-end-application/issues"
+    "url": "https://github.com/kristof-mattei/dpedit-rs/issues"
   },
-  "homepage": "https://github.com/kristof-mattei/rust-end-to-end-application#readme",
+  "homepage": "https://github.com/kristof-mattei/dpedit-rs#readme",
   "devDependencies": {
-    "@actions/tool-cache": "^2.0.1",
-    "@semantic-release/changelog": "^6.0.1",
-    "@semantic-release/commit-analyzer": "^9.0.2",
-    "@semantic-release/github": "^8.0.5",
-    "@semantic-release/release-notes-generator": "^10.0.3",
-    "conventional-changelog-conventionalcommits": "^5.0.0",
-    "prettier": "^2.7.1",
-    "semantic-release": "^19.0.3",
-    "semver": "^7.3.7",
-    "serialize-error": "^11.0.0"
+    "prettier": "3.5.3",
+    "prettier-plugin-sh": "0.17.0"
   },
   "publishConfig": {
     "access": "restricted"

@@ -9,11 +9,7 @@
             "request": "launch",
             "name": "Debug executable 'dpedit-rs'",
             "cargo": {
-                "args": [
-                    "build",
-                    "--bin=dpedit-rs",
-                    "--package=dpedit-rs"
-                ],
+                "args": ["build", "--bin=dpedit-rs", "--package=dpedit-rs"],
                 "filter": {
                     "name": "dpedit-rs",
                     "kind": "bin"

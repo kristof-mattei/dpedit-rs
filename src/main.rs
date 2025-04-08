@@ -14,14 +14,12 @@
 // */
 mod win32;
 
-use windows::{
-    core::PCWSTR,
-    Win32::Graphics::Gdi::{
-        DISPLAY_DEVICE_ACTIVE, DISPLAY_DEVICE_MIRRORING_DRIVER, DISPLAY_DEVICE_MODESPRUNED,
-        DISPLAY_DEVICE_PRIMARY_DEVICE, DISPLAY_DEVICE_REMOVABLE, DISPLAY_DEVICE_VGA_COMPATIBLE,
-        DM_POSITION,
-    },
+use windows::Win32::Graphics::Gdi::{
+    DISPLAY_DEVICE_ACTIVE, DISPLAY_DEVICE_MIRRORING_DRIVER, DISPLAY_DEVICE_MODESPRUNED,
+    DISPLAY_DEVICE_PRIMARY_DEVICE, DISPLAY_DEVICE_REMOVABLE, DISPLAY_DEVICE_VGA_COMPATIBLE,
+    DM_POSITION,
 };
+use windows::core::PCWSTR;
 
 use crate::win32::{get_display_device, get_display_settings, get_display_x_y_position};
 
@@ -29,7 +27,7 @@ fn main() {
     let args = std::env::args().collect::<Vec<_>>();
 
     if args.len() > 1 {
-        if args.get(1).map_or(false, |a| a == "/L") {
+        if args.get(1).is_some_and(|a| a == "/L") {
             list_displays();
         } else {
             set_positions(&args);
@@ -48,13 +46,19 @@ fn main() {
         println!("  Options:\n");
         println!("  /L              Lists all displays and their indices");
         println!("  <displayNum>    The index of the display to position");
-        println!( "  <xPos>          The X (horizontal) position of the top-left corner of display <displayNum>." );
-        println!( "  <YPos>          The Y (vertical) position of the top-left corner of display <displayNum>.\n");
+        println!(
+            "  <xPos>          The X (horizontal) position of the top-left corner of display <displayNum>."
+        );
+        println!(
+            "  <YPos>          The Y (vertical) position of the top-left corner of display <displayNum>.\n"
+        );
         println!("Example: dpedit.exe 1 0 0 2 -1920 21");
         println!(
             "         Moves Display #1 to coords {{0, 0}} and positions Display #2 to the left of"
         );
-        println!( "         and 21 pixels lower than Display #1 (coords {{-1920, 21}}). This example assumes" );
+        println!(
+            "         and 21 pixels lower than Display #1 (coords {{-1920, 21}}). This example assumes"
+        );
         println!("         Display #2 to be 1080p.\n");
         println!("Notes: This utility should work for any number and any size(s) of monitors.");
         println!("       The display numbers do not need to be in order.\n");
@@ -84,7 +88,7 @@ fn set_display_settings(display_index: u32, x_pos: i32, y_pos: i32) -> Result<()
     let mut dev_mode = get_display_settings(PCWSTR(dm_info.DeviceName.as_ptr()))
         .ok_or("Operation failed! Unable to read display settings.")?;
 
-    dev_mode.dmFields = DM_POSITION as u32;
+    dev_mode.dmFields = DM_POSITION;
     dev_mode.Anonymous1.Anonymous2.dmPosition.x = x_pos;
     dev_mode.Anonymous1.Anonymous2.dmPosition.y = y_pos;
 
@@ -103,12 +107,12 @@ fn list_displays() {
             "Display #{index}\n\
             Device name: {}\n\
             Device string: {}\n\
-            Active: {}\n\
-            Mirroring: {}\n\
-            Modes pruned: {}\n\
-            Primary: {}\n\
-            Removable: {}\n\
-            VGA compatible: {}",
+            Active: {:?}\n\
+            Mirroring: {:?}\n\
+            Modes pruned: {:?}\n\
+            Primary: {:?}\n\
+            Removable: {:?}\n\
+            VGA compatible: {:?}",
             String::from_utf16_lossy(&display_device.DeviceName),
             String::from_utf16_lossy(&display_device.DeviceString),
             display_device.StateFlags & DISPLAY_DEVICE_ACTIVE,
