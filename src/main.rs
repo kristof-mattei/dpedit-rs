@@ -26,44 +26,49 @@ use crate::win32::{get_display_device, get_display_settings, get_display_x_y_pos
 fn main() {
     let args = std::env::args().collect::<Vec<_>>();
 
-    if args.len() > 1 {
-        if args.get(1).is_some_and(|a| a == "/L") {
-            list_displays();
+    if let Some(first) = args.get(1) {
+        if first.eq_ignore_ascii_case("/H") || first.eq_ignore_ascii_case("/?") {
+            show_help();
+        } else if first.eq_ignore_ascii_case("/L") {
+            let all = args.get(2).is_some_and(|a| a.eq_ignore_ascii_case("/A"));
+
+            list_displays(all);
         } else {
             set_positions(&args);
         }
     } else {
-        println!("Help");
-        println!("DPEdit 1.1.0");
-        println!(
-            "A command line utility to accurately position displays in a multi-monitor setup.\n"
-        );
-        println!("Usage: dpedit.exe");
-        println!("       dpedit.exe /L");
-        println!(
-            "       dpedit.exe <displayNum> <xPos> <yPos> [<displayNum2> <xPos2> <yPos2>] ...\n"
-        );
-        println!("  Options:\n");
-        println!("  /L              Lists all displays and their indices");
-        println!("  <displayNum>    The index of the display to position");
-        println!(
-            "  <xPos>          The X (horizontal) position of the top-left corner of display <displayNum>."
-        );
-        println!(
-            "  <YPos>          The Y (vertical) position of the top-left corner of display <displayNum>.\n"
-        );
-        println!("Example: dpedit.exe 1 0 0 2 -1920 21");
-        println!(
-            "         Moves Display #1 to coords {{0, 0}} and positions Display #2 to the left of"
-        );
-        println!(
-            "         and 21 pixels lower than Display #1 (coords {{-1920, 21}}). This example assumes"
-        );
-        println!("         Display #2 to be 1080p.\n");
-        println!("Notes: This utility should work for any number and any size(s) of monitors.");
-        println!("       The display numbers do not need to be in order.\n");
-        println!("THIS UTILITY MODIFIES THE REGISTRY! USE AT YOUR OWN RISK!");
+        show_help();
     }
+}
+
+fn show_help() {
+    println!("Help");
+    println!("DPEdit 1.1.0");
+    println!("A command line utility to accurately position displays in a multi-monitor setup.\n");
+    println!("Usage: dpedit.exe");
+    println!("       dpedit.exe /L");
+    println!("       dpedit.exe <displayNum> <xPos> <yPos> [<displayNum2> <xPos2> <yPos2>] ...\n");
+    println!("  Options:\n");
+    println!("  /L              Lists all displays and their indices");
+    println!("  /A              Forces /L to list all registered displays");
+    println!("  <displayNum>    The index of the display to position");
+    println!(
+        "  <xPos>          The X (horizontal) position of the top-left corner of display <displayNum>."
+    );
+    println!(
+        "  <YPos>          The Y (vertical) position of the top-left corner of display <displayNum>.\n"
+    );
+    println!("Example: dpedit.exe 1 0 0 2 -1920 21");
+    println!(
+        "         Moves Display #1 to coords {{0, 0}} and positions Display #2 to the left of"
+    );
+    println!(
+        "         and 21 pixels lower than Display #1 (coords {{-1920, 21}}). This example assumes"
+    );
+    println!("         Display #2 to be 1080p.\n");
+    println!("Notes: This utility should work for any number and any size(s) of monitors.");
+    println!("       The display numbers do not need to be in order.\n");
+    println!("THIS UTILITY MODIFIES THE REGISTRY! USE AT YOUR OWN RISK!");
 }
 
 fn set_positions(args: &[String]) {
@@ -97,36 +102,62 @@ fn set_display_settings(display_index: u32, x_pos: i32, y_pos: i32) -> Result<()
         .ok_or("Operation failed! Unable to write to display settings.")
 }
 
-fn list_displays() {
+fn list_displays(show_all: bool) {
     let mut index = 0;
 
     while let Some(display_device) = get_display_device(index) {
         index += 1;
 
-        println!(
-            "Display #{index}\n\
-            Device name: {}\n\
-            Device string: {}\n\
-            Active: {:?}\n\
-            Mirroring: {:?}\n\
-            Modes pruned: {:?}\n\
-            Primary: {:?}\n\
-            Removable: {:?}\n\
-            VGA compatible: {:?}",
-            String::from_utf16_lossy(&display_device.DeviceName),
-            String::from_utf16_lossy(&display_device.DeviceString),
-            display_device.StateFlags & DISPLAY_DEVICE_ACTIVE,
-            display_device.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER,
-            display_device.StateFlags & DISPLAY_DEVICE_MODESPRUNED,
-            display_device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE,
-            display_device.StateFlags & DISPLAY_DEVICE_REMOVABLE,
-            display_device.StateFlags & DISPLAY_DEVICE_VGA_COMPATIBLE
-        );
+        if show_all || (display_device.StateFlags.contains(DISPLAY_DEVICE_ACTIVE)) {
+            println!();
+            println!("Display #{}", index + 1);
+            println!(
+                "Device name: {}",
+                String::from_utf16_lossy(&display_device.DeviceName)
+            );
+            println!(
+                "Device string: {}",
+                String::from_utf16_lossy(&display_device.DeviceString)
+            );
+            println!(
+                "Active: {}",
+                (display_device.StateFlags.contains(DISPLAY_DEVICE_ACTIVE))
+            );
+            println!(
+                "Mirroring: {}",
+                (display_device
+                    .StateFlags
+                    .contains(DISPLAY_DEVICE_MIRRORING_DRIVER))
+            );
+            println!(
+                "Modes pruned: {}",
+                (display_device
+                    .StateFlags
+                    .contains(DISPLAY_DEVICE_MODESPRUNED))
+            );
+            println!(
+                "Primary: {}",
+                (display_device
+                    .StateFlags
+                    .contains(DISPLAY_DEVICE_PRIMARY_DEVICE))
+            );
+            println!(
+                "Removable: {}",
+                (display_device.StateFlags.contains(DISPLAY_DEVICE_REMOVABLE))
+            );
+            println!(
+                "VGA compatible: {}",
+                (display_device
+                    .StateFlags
+                    .contains(DISPLAY_DEVICE_VGA_COMPATIBLE))
+            );
 
-        if let Some((x, y)) = get_display_x_y_position(PCWSTR(display_device.DeviceName.as_ptr())) {
-            println!("Position: {{{}, {}}}", x, y);
+            if let Some(((width, height), (x, y))) =
+                get_display_x_y_position(PCWSTR(display_device.DeviceName.as_ptr()))
+            {
+                println!("Dimensions: {{{}, {}}}", width, height);
+                println!("Position: {{{}, {}}}", x, y);
+            }
         }
-
-        println!();
     }
 }

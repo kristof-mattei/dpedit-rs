@@ -46,28 +46,31 @@ pub(crate) fn get_display_device(index: u32) -> Option<DISPLAY_DEVICEW> {
         ..Default::default()
     };
 
-    let r = unsafe {
+    unsafe {
         EnumDisplayDevicesW(None, index, &mut dm_info, EDD_GET_DEVICE_INTERFACE_NAME).as_bool()
-    };
-
-    r.then_some(dm_info)
+    }
+    .then_some(dm_info)
 }
 
-pub(crate) fn get_display_x_y_position(display_device_name: PCWSTR) -> Option<(i32, i32)> {
+pub(crate) fn get_display_x_y_position(
+    display_device_name: PCWSTR,
+) -> Option<((u32, u32), (i32, i32))> {
     let mut dev_mode = DEVMODEW {
         dmSize: size_of::<DEVMODEW>().try_into().unwrap(),
-        dmDriverExtra: 0,
         ..Default::default()
     };
 
-    let r = unsafe {
-        EnumDisplaySettingsW(display_device_name, ENUM_CURRENT_SETTINGS, &mut dev_mode).as_bool()
-    };
-
-    r.then_some(unsafe {
-        (
-            dev_mode.Anonymous1.Anonymous2.dmPosition.x,
-            dev_mode.Anonymous1.Anonymous2.dmPosition.y,
-        )
-    })
+    unsafe {
+        EnumDisplaySettingsW(display_device_name, ENUM_CURRENT_SETTINGS, &mut dev_mode)
+            .as_bool()
+            .then_some({
+                (
+                    (dev_mode.dmPelsWidth, dev_mode.dmPelsHeight),
+                    (
+                        dev_mode.Anonymous1.Anonymous2.dmPosition.x,
+                        dev_mode.Anonymous1.Anonymous2.dmPosition.y,
+                    ),
+                )
+            })
+    }
 }
