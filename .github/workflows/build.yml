@@ -115,7 +115,7 @@ jobs:
 
       - name: Get binstall
         shell: pwsh
-        working-directory: /tmp
+        working-directory: ${{ env.TEMP }}
         run: |
           archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
           wget "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
@@ -306,7 +306,7 @@ jobs:
 
       - name: Get binstall
         shell: pwsh
-        working-directory: /tmp
+        working-directory: ${{ env.TEMP }}
         run: |
           archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
           wget "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
@@ -483,7 +483,7 @@ jobs:
 
       - name: Get binstall
         shell: pwsh
-        working-directory: /tmp
+        working-directory: ${{ env.TEMP }}
         run: |
           archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
           wget "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
@@ -646,7 +646,7 @@ jobs:
 
       - name: Set new tags on pushed image
         shell: pwsh
-        working-directory: /tmp/container/
+        working-directory: ${{ env.TEMP }}/container/
         run: |
           new_tags="${{ join(steps.meta.outputs.tags, ' ') }}"
           new_tags=$(printf -- '--tag %s ' $new_tags)
