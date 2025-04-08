@@ -88,7 +88,7 @@ fn set_display_settings(display_index: u32, x_pos: i32, y_pos: i32) -> Result<()
     let mut dev_mode = get_display_settings(PCWSTR(dm_info.DeviceName.as_ptr()))
         .ok_or("Operation failed! Unable to read display settings.")?;
 
-    dev_mode.dmFields = DM_POSITION as u32;
+    dev_mode.dmFields = DM_POSITION;
     dev_mode.Anonymous1.Anonymous2.dmPosition.x = x_pos;
     dev_mode.Anonymous1.Anonymous2.dmPosition.y = y_pos;
 
@@ -107,12 +107,12 @@ fn list_displays() {
             "Display #{index}\n\
             Device name: {}\n\
             Device string: {}\n\
-            Active: {}\n\
-            Mirroring: {}\n\
-            Modes pruned: {}\n\
-            Primary: {}\n\
-            Removable: {}\n\
-            VGA compatible: {}",
+            Active: {:?}\n\
+            Mirroring: {:?}\n\
+            Modes pruned: {:?}\n\
+            Primary: {:?}\n\
+            Removable: {:?}\n\
+            VGA compatible: {:?}",
             String::from_utf16_lossy(&display_device.DeviceName),
             String::from_utf16_lossy(&display_device.DeviceString),
             display_device.StateFlags & DISPLAY_DEVICE_ACTIVE,
