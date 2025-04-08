@@ -118,11 +118,11 @@ jobs:
         working-directory: ${{ env.TEMP }}
         run: |
           $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
-          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
+          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
 
-          Expand-Archive  "./${archive}"
+          Expand-Archive  "./${archive}" -DestinationPath .
 
-          rm "./${archive}"
+          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
 
           mv ./cargo-binstall ~/.cargo/bin/
 
@@ -309,11 +309,11 @@ jobs:
         working-directory: ${{ env.TEMP }}
         run: |
           $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
-          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
+          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
 
-          Expand-Archive  "./${archive}"
+          Expand-Archive  "./${archive}" -DestinationPath .
 
-          rm "./${archive}"
+          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
 
           mv ./cargo-binstall ~/.cargo/bin/
 
@@ -486,11 +486,11 @@ jobs:
         working-directory: ${{ env.TEMP }}
         run: |
           $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
-          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}"
+          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
 
-          Expand-Archive  "./${archive}"
+          Expand-Archive  "./${archive}" -DestinationPath .
 
-          rm "./${archive}"
+          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
 
           mv ./cargo-binstall ~/.cargo/bin/
 
