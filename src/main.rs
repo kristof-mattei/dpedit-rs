@@ -27,7 +27,7 @@ fn main() {
     let args = std::env::args().collect::<Vec<_>>();
 
     if args.len() > 1 {
-        if args.get(1).map_or(false, |a| a == "/L") {
+        if args.get(1).is_some_and(|a| a == "/L") {
             list_displays();
         } else {
             set_positions(&args);
