@@ -1,11 +1,5 @@
 name: Release
 
-env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
-
 concurrency:
   group: "${{ github.workflow }}"
   cancel-in-progress: true # only last step is important, which runs or doesn't
@@ -18,6 +12,13 @@ permissions:
   packages: write # to write tags to Docker registry
   issues: write
   pull-requests: write
+
+env:
+  CARGO_TERM_COLOR: always
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   release:
@@ -53,10 +54,10 @@ jobs:
           path: |
             ~/.cargo
             ./target
-          key: ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-cocogitto
+          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-cocogitto
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
-            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
+            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
+            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
 
       - name: Set up toolchain
         shell: pwsh
@@ -88,7 +89,7 @@ jobs:
       - name: Install cocogitto to get the next version number
         shell: pwsh
         run: |
-          cargo binstall --no-confirm cocogitto --target x86_64-unknown-linux-musl --pkg-url "{ repo }/releases/download/{ version }/{ name }-{ version }-{ target }.tar.gz" --bin-dir "{ bin }" --pkg-fmt tgz
+          cargo binstall --no-confirm cocogitto
 
       - name: Bump
         shell: pwsh
@@ -99,8 +100,8 @@ jobs:
 
           cog bump --auto
 
-          VERSION="v$(cog -v get-version)"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          $version = "v$(cog -v get-version)"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
 
           git push
 
