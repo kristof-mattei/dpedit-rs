@@ -1,7 +1,5 @@
 name: Publish crate
 
-env: {}
-
 concurrency:
   group: "${{ github.workflow }}"
   cancel-in-progress: false # last one must win in case of multiple releases
@@ -13,6 +11,9 @@ on:
 
 permissions:
   contents: read
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   repo-has-crate:
@@ -26,8 +27,8 @@ jobs:
         id: determine
         shell: pwsh
         run: |
-          HAS_CRATE="${{ vars.HAS_CRATE }}"
-          echo "has_crate=${HAS_CRATE:-false}" >> ${GITHUB_OUTPUT}
+          has_crate="${{ vars.HAS_CRATE }}"
+          echo "has_crate=${has_crate:-false}" >> ${GITHUB_OUTPUT}
 
   publish-crate:
     name: Publish crate
@@ -56,10 +57,10 @@ jobs:
           path: |
             ~/.cargo
             ./target
-          key: ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-test
+          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-test
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
-            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
+            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
+            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
 
       - name: Set up mold
         uses: rui314/setup-mold@67424c1b3680e35255d95971cbd5de0047bf31c3 # v1
@@ -78,37 +79,24 @@ jobs:
 
           cargo --version
 
-      - name: Get binstall
-        shell: pwsh
-        working-directory: ${{ env.TEMP }}
-        run: |
-          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
-          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
-
-          Expand-Archive  "./${archive}" -DestinationPath .
-
-          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
-
-          Move-Item -Force ./cargo-binstall.exe ~/.cargo/bin/
-
-      - name: Install binstall to do set-version
+      - name: Install cargo-edit to do set-version
         shell: pwsh
         run: |
-          cargo binstall cargo-edit
+          cargo install cargo-edit
 
       - name: Set version in Cargo.toml / Cargo.lock
         shell: pwsh
         id: version
         run: |
-          VERSION="${{ github.ref_name }}"
+          $version="${{ github.ref_name }}"
           # remove v
-          VERSION="${VERSION//v/}"
+          $version = $version -replace 'v', ''
 
           # store
-          cargo set-version ${VERSION}
+          cargo set-version $version
 
           # debug
-          cat Cargo.toml
+          Get-Content -Path Cargo.toml
 
       - name: Publish
         shell: pwsh

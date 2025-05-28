@@ -1,11 +1,5 @@
 name: Test Release
 
-env:
-  # Use docker.io for Docker Hub if empty
-  REGISTRY: ghcr.io
-  # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
-
 on:
   workflow_dispatch: # releasing is manual as we don't want to release every time
 
@@ -13,6 +7,13 @@ permissions:
   contents: write
   issues: read
   pull-requests: read
+
+env:
+  CARGO_TERM_COLOR: always
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   test-release:
@@ -47,10 +48,10 @@ jobs:
           path: |
             ~/.cargo
             ./target
-          key: ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-cocogitto
+          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-cocogitto
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
-            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
+            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
+            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
 
       - name: Set up toolchain
         shell: pwsh
@@ -82,7 +83,7 @@ jobs:
       - name: Install cocogitto to get the next version number
         shell: pwsh
         run: |
-          cargo binstall --no-confirm cocogitto --target x86_64-unknown-linux-musl --pkg-url "{ repo }/releases/download/{ version }/{ name }-{ version }-{ target }.tar.gz" --bin-dir "{ bin }" --pkg-fmt tgz
+          cargo binstall --no-confirm cocogitto
 
       - name: Bump
         shell: pwsh
@@ -93,12 +94,12 @@ jobs:
 
           cog bump --auto
 
-          VERSION="v$(cog -v get-version)"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          $version = "v$(cog -v get-version)"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
 
-          cog changelog --at ${VERSION} > GITHUB_CHANGELOG.md
+          cog changelog --at $version > GITHUB_CHANGELOG.md
 
-          echo "New version: ${VERSION}"
+          Write-Host "New version: $version"
 
           echo "Changelog: "
 
