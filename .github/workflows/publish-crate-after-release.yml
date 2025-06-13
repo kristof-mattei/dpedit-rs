@@ -79,10 +79,23 @@ jobs:
 
           cargo --version
 
+      - name: Get binstall
+        shell: pwsh
+        working-directory: ${{ env.TEMP }}
+        run: |
+          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
+
+          Expand-Archive  "./${archive}" -DestinationPath .
+
+          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
+
+          Move-Item -Force ./cargo-binstall.exe ~/.cargo/bin/
+
       - name: Install cargo-edit to do set-version
         shell: pwsh
         run: |
-          cargo install cargo-edit
+          cargo binstall --no-confirm cargo-edit
 
       - name: Set version in Cargo.toml / Cargo.lock
         shell: pwsh
