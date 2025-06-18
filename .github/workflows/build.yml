@@ -17,15 +17,14 @@ permissions:
   packages: write
   pull-requests: write
 
-env:
-  CARGO_TERM_COLOR: always
-  RUSTFLAGS: --deny=warnings
-
 concurrency:
   # each new commit to a PR runs this workflow
   # so we need to avoid a long running older one from overwriting the "pr-<number>-latest"
   group: "${{ github.workflow }} @ ${{ github.ref_name }}"
   cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: --deny=warnings
 
 jobs:
   changes:
