@@ -468,8 +468,8 @@ jobs:
     needs:
       - calculate-version
       - cargo-build
-      - cargo-fmt
       - cargo-clippy-and-report
+      - cargo-fmt
       - cargo-test-and-report
     if: |
       always()
