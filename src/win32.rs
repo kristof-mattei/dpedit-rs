@@ -24,14 +24,14 @@ pub(crate) fn get_display_settings(display_device_name: PCWSTR) -> Option<DEVMOD
     let mut dev_mode = DEVMODEW {
         dmSize: std::mem::size_of::<DEVMODEW>().try_into().unwrap(),
         dmDriverExtra: 0,
-        ..Default::default()
+        ..DEVMODEW::default()
     };
 
     let r = unsafe {
         EnumDisplaySettingsExW(
             display_device_name,
             ENUM_CURRENT_SETTINGS,
-            &mut dev_mode,
+            &raw mut dev_mode,
             EDS_RAWMODE,
         )
     }
@@ -43,11 +43,11 @@ pub(crate) fn get_display_settings(display_device_name: PCWSTR) -> Option<DEVMOD
 pub(crate) fn get_display_device(index: u32) -> Option<DISPLAY_DEVICEW> {
     let mut dm_info = DISPLAY_DEVICEW {
         cb: size_of::<DISPLAY_DEVICEW>().try_into().unwrap(),
-        ..Default::default()
+        ..DISPLAY_DEVICEW::default()
     };
 
     unsafe {
-        EnumDisplayDevicesW(None, index, &mut dm_info, EDD_GET_DEVICE_INTERFACE_NAME).as_bool()
+        EnumDisplayDevicesW(None, index, &raw mut dm_info, EDD_GET_DEVICE_INTERFACE_NAME).as_bool()
     }
     .then_some(dm_info)
 }
@@ -57,20 +57,24 @@ pub(crate) fn get_display_x_y_position(
 ) -> Option<((u32, u32), (i32, i32))> {
     let mut dev_mode = DEVMODEW {
         dmSize: size_of::<DEVMODEW>().try_into().unwrap(),
-        ..Default::default()
+        ..DEVMODEW::default()
     };
 
     unsafe {
-        EnumDisplaySettingsW(display_device_name, ENUM_CURRENT_SETTINGS, &mut dev_mode)
-            .as_bool()
-            .then_some({
+        EnumDisplaySettingsW(
+            display_device_name,
+            ENUM_CURRENT_SETTINGS,
+            &raw mut dev_mode,
+        )
+        .as_bool()
+        .then_some({
+            (
+                (dev_mode.dmPelsWidth, dev_mode.dmPelsHeight),
                 (
-                    (dev_mode.dmPelsWidth, dev_mode.dmPelsHeight),
-                    (
-                        dev_mode.Anonymous1.Anonymous2.dmPosition.x,
-                        dev_mode.Anonymous1.Anonymous2.dmPosition.y,
-                    ),
-                )
-            })
+                    dev_mode.Anonymous1.Anonymous2.dmPosition.x,
+                    dev_mode.Anonymous1.Anonymous2.dmPosition.y,
+                ),
+            )
+        })
     }
 }
