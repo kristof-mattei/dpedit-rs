@@ -31,7 +31,7 @@ pub(crate) fn get_display_settings(display_device_name: PCWSTR) -> Option<DEVMOD
         EnumDisplaySettingsExW(
             display_device_name,
             ENUM_CURRENT_SETTINGS,
-            &raw mut dev_mode,
+            &mut dev_mode,
             EDS_RAWMODE,
         )
     }
@@ -47,7 +47,7 @@ pub(crate) fn get_display_device(index: u32) -> Option<DISPLAY_DEVICEW> {
     };
 
     unsafe {
-        EnumDisplayDevicesW(None, index, &raw mut dm_info, EDD_GET_DEVICE_INTERFACE_NAME).as_bool()
+        EnumDisplayDevicesW(None, index, &mut dm_info, EDD_GET_DEVICE_INTERFACE_NAME).as_bool()
     }
     .then_some(dm_info)
 }
@@ -61,20 +61,16 @@ pub(crate) fn get_display_x_y_position(
     };
 
     unsafe {
-        EnumDisplaySettingsW(
-            display_device_name,
-            ENUM_CURRENT_SETTINGS,
-            &raw mut dev_mode,
-        )
-        .as_bool()
-        .then_some({
-            (
-                (dev_mode.dmPelsWidth, dev_mode.dmPelsHeight),
+        EnumDisplaySettingsW(display_device_name, ENUM_CURRENT_SETTINGS, &mut dev_mode)
+            .as_bool()
+            .then_some({
                 (
-                    dev_mode.Anonymous1.Anonymous2.dmPosition.x,
-                    dev_mode.Anonymous1.Anonymous2.dmPosition.y,
-                ),
-            )
-        })
+                    (dev_mode.dmPelsWidth, dev_mode.dmPelsHeight),
+                    (
+                        dev_mode.Anonymous1.Anonymous2.dmPosition.x,
+                        dev_mode.Anonymous1.Anonymous2.dmPosition.y,
+                    ),
+                )
+            })
     }
 }
