@@ -190,7 +190,7 @@ jobs:
       - name: Build
         shell: pwsh
         run: |
-          cargo build --all-targets --workspace --verbose
+          cargo build --all-features --all-targets --locked --workspace --verbose
 
   cargo-fmt:
     name: Cargo fmt
@@ -337,7 +337,7 @@ jobs:
           # build-* ones are not parsed by grcov
           LLVM_PROFILE_FILE: "profiling/build-%p-%m.profraw"
         run: |
-          cargo build --all-targets --all-features --workspace --verbose
+          cargo build --all-features --all-targets --locked --workspace --verbose
 
       - name: Run nextest
         shell: pwsh
@@ -455,7 +455,7 @@ jobs:
       - name: Run Clippy for GitHub Actions report
         uses: actions-rs-plus/clippy-check@fe8905c5766416f0593a503a2230a7c83141a8f0 # v2.3.0
         with:
-          args: --workspace --all-targets --all-features
+          args: --all-features --all-targets --locked --workspace --verbose
 
   all-done:
     name: All done
