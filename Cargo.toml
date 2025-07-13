@@ -5,11 +5,11 @@ edition = "2024"
 rust-version = "1.88.0"
 authors = ["Kristof Mattei"]
 description = "DPEdit-rs"
-license-file = "LICENSE"
+license = "MIT"
 categories = ["windows", "cli"]
 keywords = ["registry", "display", "utility"]
 repository = "https://github.com/kristof-mattei/dpedit-rs"
-include = [".cargo/**", ".config/**", "src/**", "tests/**"]
+include = ["src/**", "/LICENSE", "/LICENSE-*"]
 
 [lints.clippy]
 # don't stop from compiling / running

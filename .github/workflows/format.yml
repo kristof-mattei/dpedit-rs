@@ -1,4 +1,5 @@
-name: Prettier
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Validate formatting
 
 on:
   workflow_dispatch:
@@ -13,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  prettier:
-    name: Prettier
+  format:
+    name: Format
     runs-on: windows-latest
     steps:
       - name: Disable autocrlf

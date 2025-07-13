@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: Build
+name: CI
 
 on:
   push:
@@ -9,14 +9,14 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
-
 concurrency:
   # each new commit to a PR runs this workflow
   # so we need to avoid a long running older one from overwriting the "pr-<number>-latest"
   group: "${{ github.workflow }} @ ${{ github.ref_name }}"
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always

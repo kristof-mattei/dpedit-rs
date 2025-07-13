@@ -1,4 +1,7 @@
-/target
 /node_modules
-/reports
 /profiling
+/reports
+/target
+
+# samply output
+/profile.json
