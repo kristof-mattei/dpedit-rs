@@ -9,6 +9,7 @@ use windows::Win32::UI::WindowsAndMessaging::EDD_GET_DEVICE_INTERFACE_NAME;
 use windows::core::PCWSTR;
 
 pub(crate) fn set_display_settings(display_device_name: PCWSTR, dev_mode: &DEVMODEW) -> bool {
+    // SAFETY: API call
     unsafe {
         ChangeDisplaySettingsExW(
             display_device_name,
@@ -27,6 +28,7 @@ pub(crate) fn get_display_settings(display_device_name: PCWSTR) -> Option<DEVMOD
         ..DEVMODEW::default()
     };
 
+    // SAFETY: API call
     let r = unsafe {
         EnumDisplaySettingsExW(
             display_device_name,
@@ -46,6 +48,7 @@ pub(crate) fn get_display_device(index: u32) -> Option<DISPLAY_DEVICEW> {
         ..DISPLAY_DEVICEW::default()
     };
 
+    // SAFETY: API call
     unsafe {
         EnumDisplayDevicesW(None, index, &raw mut dm_info, EDD_GET_DEVICE_INTERFACE_NAME).as_bool()
     }
@@ -60,21 +63,25 @@ pub(crate) fn get_display_x_y_position(
         ..DEVMODEW::default()
     };
 
-    unsafe {
+    // SAFETY: API call
+    let result = unsafe {
         EnumDisplaySettingsW(
             display_device_name,
             ENUM_CURRENT_SETTINGS,
             &raw mut dev_mode,
         )
-        .as_bool()
-        .then_some({
-            (
-                (dev_mode.dmPelsWidth, dev_mode.dmPelsHeight),
-                (
-                    dev_mode.Anonymous1.Anonymous2.dmPosition.x,
-                    dev_mode.Anonymous1.Anonymous2.dmPosition.y,
-                ),
-            )
-        })
+    }
+    .as_bool();
+
+    if result {
+        // SAFETY: As per API docs
+        let union_access = unsafe { dev_mode.Anonymous1.Anonymous2 };
+
+        Some((
+            (dev_mode.dmPelsWidth, dev_mode.dmPelsHeight),
+            (union_access.dmPosition.x, union_access.dmPosition.y),
+        ))
+    } else {
+        None
     }
 }
