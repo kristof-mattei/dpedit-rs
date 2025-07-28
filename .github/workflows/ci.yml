@@ -20,12 +20,16 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_FEATURES: --all-features
   RUSTFLAGS: --deny=warnings
 
 jobs:
   changes:
     name: Detect changes
     runs-on: windows-latest
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
@@ -50,6 +54,8 @@ jobs:
   calculate-version:
     name: Calculate version
     runs-on: windows-latest
+    permissions:
+      contents: read
     needs:
       - changes
     outputs:
@@ -190,7 +196,7 @@ jobs:
       - name: Build
         shell: pwsh
         run: |
-          cargo build --all-features --all-targets --locked --workspace --verbose
+          cargo build ${{ env.CARGO_FEATURES }} --all-targets --locked --workspace --verbose
 
   cargo-fmt:
     name: Cargo fmt
@@ -260,6 +266,7 @@ jobs:
     runs-on: windows-latest
     permissions:
       checks: write
+      contents: read
       id-token: write
       pull-requests: write
     steps:
@@ -337,7 +344,7 @@ jobs:
           # build-* ones are not parsed by grcov
           LLVM_PROFILE_FILE: "profiling/build-%p-%m.profraw"
         run: |
-          cargo build --all-features --all-targets --locked --workspace --verbose
+          cargo build ${{ env.CARGO_FEATURES }} --all-targets --locked --workspace --verbose
 
       - name: Run nextest
         shell: pwsh
@@ -346,7 +353,7 @@ jobs:
           RUSTFLAGS: "${{ env.RUSTFLAGS }} --allow=warnings -Cinstrument-coverage"
           LLVM_PROFILE_FILE: "profiling/profile-%p-%m.profraw"
         run: |
-          cargo nextest run --profile ci --no-fail-fast --all-targets --all-features --workspace
+          cargo nextest run --profile ci --no-fail-fast ${{ env.CARGO_FEATURES }} --all-targets --workspace
         continue-on-error: true
 
       - name: Upload test results
@@ -455,7 +462,7 @@ jobs:
       - name: Run Clippy for GitHub Actions report
         uses: actions-rs-plus/clippy-check@fe8905c5766416f0593a503a2230a7c83141a8f0 # v2.3.0
         with:
-          args: --all-features --all-targets --locked --workspace --verbose
+          args: ${{ env.CARGO_FEATURES }} --all-targets --locked --workspace --verbose
 
   all-done:
     name: All done
