@@ -33,7 +33,7 @@ pub(crate) fn get_display_settings(display_device_name: PCWSTR) -> Option<DEVMOD
         EnumDisplaySettingsExW(
             display_device_name,
             ENUM_CURRENT_SETTINGS,
-            &raw mut dev_mode,
+            &mut dev_mode,
             EDS_RAWMODE,
         )
     }
@@ -50,7 +50,7 @@ pub(crate) fn get_display_device(index: u32) -> Option<DISPLAY_DEVICEW> {
 
     // SAFETY: API call
     unsafe {
-        EnumDisplayDevicesW(None, index, &raw mut dm_info, EDD_GET_DEVICE_INTERFACE_NAME).as_bool()
+        EnumDisplayDevicesW(None, index, &mut dm_info, EDD_GET_DEVICE_INTERFACE_NAME).as_bool()
     }
     .then_some(dm_info)
 }
