@@ -460,7 +460,7 @@ jobs:
           cargo --version
 
       - name: Run Clippy for GitHub Actions report
-        uses: actions-rs-plus/clippy-check@6dc598789a76074745030c6009f6a75976c5344e
+        uses: actions-rs-plus/clippy-check@28e4518e817a6d0fb772871073f78b72ba5051be
         with:
           args: ${{ env.CARGO_FEATURES }} --all-targets --locked --workspace --verbose
 
