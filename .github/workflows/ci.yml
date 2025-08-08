@@ -490,44 +490,8 @@ jobs:
           unique_tag=pr-${{ github.event.pull_request.base.sha }}-${{ github.event.pull_request.head.sha }}
           echo "unique_tag=${unique_tag}" >> ${GITHUB_OUTPUT}
 
-          # remove slashes from platform (`amd64/v3` -> `amd64-v3`)
-          platform_no_slashes=${{ matrix.platform }}
-          platform_no_slashes=${platform_no_slashes//\//-}
-          echo "platform_no_slashes=${platform_no_slashes}" >> ${GITHUB_OUTPUT}
-
-          # but we're only building 1 arch here, so we need to identify that container (we'll merge them later)
-          unique_tag_arch=${unique_tag}-${platform_no_slashes}
-          echo "unique_tag_arch=${unique_tag_arch}" >> ${GITHUB_OUTPUT}
-
-          # The application name, used in the Dockerfile
-          application_name=${{ env.IMAGE_NAME }}
-          # split at the last / and keep that (kristof-mattei/repo-name -> repo-name)
-          application_name=${application_name##*/}
-          # lowercase
-          application_name=${application_name,,}
-          echo "application_name=${application_name}" >> ${GITHUB_OUTPUT}
-
-          # The registry to which we'll push
-          registry=${{ env.REGISTRY }}
-          registry=${registry,,}
-          echo "registry=${registry}" >> ${GITHUB_OUTPUT}
-
-          # The final full image name, which is the registry, the owner and the repo name
-          image_name=${{ env.IMAGE_NAME }}
-          image_name=${image_name,,}
-          echo "full_image_name_remote_registry=${registry}/${image_name}" >> ${GITHUB_OUTPUT}
-
-          # The local registry to which we'll push
-          local_registry=localhost:5000
-          local_registry=${local_registry,,}
-          echo "full_image_name_local_registry=${local_registry}/${image_name}" >> ${GITHUB_OUTPUT}
-
-          # The application's description, from Cargo.toml
-          description=$(cargo get package.description)
-          echo "description=${description}" >> ${GITHUB_OUTPUT}
-
-      - name: Set up Docker
-        uses: docker/setup-docker-action@e61617a16c407a86262fb923c35a616ddbe070b3 # v4.6.0
+      - name: Run Clippy for GitHub Actions report
+        uses: actions-rs-plus/clippy-check@28e4518e817a6d0fb772871073f78b72ba5051be
         with:
           daemon-config: |
             {
