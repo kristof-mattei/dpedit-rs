@@ -50,13 +50,15 @@ jobs:
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
-      - name: Disable autocrlf
+      - &disable_autocrlf
+        name: Disable autocrlf
         shell: pwsh
         run: |
           git config --global core.autocrlf false
           git config --global core.eol lf
 
-      - name: Checkout
+      - &checkout
+        name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
           show-progress: false
@@ -95,7 +97,8 @@ jobs:
           show-progress: false
           fetch-depth: 0
 
-      - name: Cache dependencies
+      - &cache_dependencies
+        name: Cache dependencies
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         env:
           CACHE_NAME: cargo-cache-dependencies
@@ -103,15 +106,17 @@ jobs:
           path: |
             ~/.cargo
             ./target
-          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-cocogitto
+          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-${{ env.GITHUB_JOB }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
             ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
 
-      - name: Set up mold
+      - &set_up_mold
+        name: Set up mold
         uses: rui314/setup-mold@7344740a9418dcdcb481c7df83d9fbd1d5072d7d # v1
 
-      - name: Set up toolchain
+      - &set_up_toolchain
+        name: Set up toolchain
         shell: pwsh
         run: |
           Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt.exe
@@ -125,7 +130,8 @@ jobs:
 
           cargo --version
 
-      - name: Get binstall
+      - &get_binstall
+        name: Get binstall
         shell: pwsh
         working-directory: ${{ env.TEMP }}
         run: |
@@ -171,46 +177,15 @@ jobs:
       github.event_name == 'pull_request' &&
       fromJSON(needs.changes.outputs.code) == true
     steps:
-      - name: Disable autocrlf
-        shell: pwsh
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
+      - *disable_autocrlf
 
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-        with:
-          show-progress: false
+      - *checkout
 
-      - name: Cache dependencies
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-        env:
-          CACHE_NAME: cargo-cache-dependencies
-        with:
-          path: |
-            ~/.cargo
-            ./target
-          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-build
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
+      - *cache_dependencies
 
-      - name: Set up mold
-        uses: rui314/setup-mold@7344740a9418dcdcb481c7df83d9fbd1d5072d7d # v1
+      - *set_up_mold
 
-      - name: Set up toolchain
-        shell: pwsh
-        run: |
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rust-analyzer.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt.exe
-
-          rustup self update
-          rustup update
-          rustup show active-toolchain || rustup toolchain install
-          rustup show
-
-          cargo --version
+      - *set_up_toolchain
 
       - name: Build
         shell: pwsh
@@ -226,46 +201,15 @@ jobs:
       github.event_name == 'pull_request' &&
       fromJSON(needs.changes.outputs.code) == true
     steps:
-      - name: Disable autocrlf
-        shell: pwsh
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
+      - *disable_autocrlf
 
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-        with:
-          show-progress: false
+      - *checkout
 
-      - name: Cache dependencies
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-        env:
-          CACHE_NAME: cargo-cache-dependencies
-        with:
-          path: |
-            ~/.cargo
-            ./target
-          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-fmt
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
+      - *cache_dependencies
 
-      - name: Set up mold
-        uses: rui314/setup-mold@7344740a9418dcdcb481c7df83d9fbd1d5072d7d # v1
+      - *set_up_mold
 
-      - name: Set up toolchain
-        shell: pwsh
-        run: |
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rust-analyzer.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt.exe
-
-          rustup self update
-          rustup update
-          rustup show active-toolchain || rustup toolchain install
-          rustup show
-
-          cargo --version
+      - *set_up_toolchain
 
       - name: Install rustfmt
         shell: pwsh
@@ -289,46 +233,15 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
-      - name: Disable autocrlf
-        shell: pwsh
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
+      - *disable_autocrlf
 
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-        with:
-          show-progress: false
+      - *checkout
 
-      - name: Cache dependencies
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-        env:
-          CACHE_NAME: cargo-cache-dependencies
-        with:
-          path: |
-            ~/.cargo
-            ./target
-          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-test
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
+      - *cache_dependencies
 
-      - name: Set up mold
-        uses: rui314/setup-mold@7344740a9418dcdcb481c7df83d9fbd1d5072d7d # v1
+      - *set_up_mold
 
-      - name: Set up toolchain
-        shell: pwsh
-        run: |
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rust-analyzer.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt.exe
-
-          rustup self update
-          rustup update
-          rustup show active-toolchain || rustup toolchain install
-          rustup show
-
-          cargo --version
+      - *set_up_toolchain
 
       - name: Install llvm-tools
         shell: pwsh
@@ -338,18 +251,7 @@ jobs:
           # restore symlinks
           rustup update
 
-      - name: Get binstall
-        shell: pwsh
-        working-directory: ${{ env.TEMP }}
-        run: |
-          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
-          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
-
-          Expand-Archive  "./${archive}" -DestinationPath .
-
-          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
-
-          Move-Item -Force ./cargo-binstall.exe ~/.cargo/bin/
+      - *get_binstall
 
       - name: Install nextest, custom test runner, with native support for junit and grcov
         shell: pwsh
@@ -437,46 +339,15 @@ jobs:
       github.event_name == 'pull_request' &&
       fromJSON(needs.changes.outputs.code) == true
     steps:
-      - name: Disable autocrlf
-        shell: pwsh
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
+      - *disable_autocrlf
 
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-        with:
-          show-progress: false
+      - *checkout
 
-      - name: Cache dependencies
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-        env:
-          CACHE_NAME: cargo-cache-dependencies
-        with:
-          path: |
-            ~/.cargo
-            ./target
-          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-clippy
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
+      - *cache_dependencies
 
-      - name: Set up mold
-        uses: rui314/setup-mold@7344740a9418dcdcb481c7df83d9fbd1d5072d7d # v1
+      - *set_up_mold
 
-      - name: Set up toolchain
-        shell: pwsh
-        run: |
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rust-analyzer.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt.exe
-
-          rustup self update
-          rustup update
-          rustup show active-toolchain || rustup toolchain install
-          rustup show
-
-          cargo --version
+      - *set_up_toolchain
 
       - name: Run Clippy for GitHub Actions report
         uses: actions-rs-plus/clippy-check@fe8905c5766416f0593a503a2230a7c83141a8f0 # v2.3.0
@@ -509,40 +380,15 @@ jobs:
     # if:
     # ... is not needed because calculate-version will not run if we disable building the docker container
     steps:
-      - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-        with:
-          show-progress: false
+      - *disable_autocrlf
 
-      - name: Cache dependencies
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
-        env:
-          CACHE_NAME: cargo-cache-dependencies
-        with:
-          path: |
-            ~/.cargo
-            ./target
-          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-docker
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
+      - *checkout
 
-      - name: Set up mold
-        uses: rui314/setup-mold@7344740a9418dcdcb481c7df83d9fbd1d5072d7d # v1
+      - *cache_dependencies
 
-      - name: Set up toolchain
-        shell: bash
-        run: |
-          rm ${HOME}/.cargo/bin/cargo-fmt
-          rm ${HOME}/.cargo/bin/rust-analyzer
-          rm ${HOME}/.cargo/bin/rustfmt
+      - *set_up_mold
 
-          rustup self update
-          rustup update
-          rustup show active-toolchain || rustup toolchain install
-          rustup show
-
-          cargo --version
+      - *set_up_toolchain
 
       - name: Get binstall
         shell: bash
