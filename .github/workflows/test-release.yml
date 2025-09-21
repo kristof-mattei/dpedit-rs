@@ -4,6 +4,10 @@ name: Test Release
 on:
   workflow_dispatch: # releasing is manual as we don't want to release every time
 
+concurrency:
+  group: "${{ github.workflow }}"
+  cancel-in-progress: true # only last step is important, which runs or doesn't
+
 permissions:
   contents: write
   issues: read
@@ -19,21 +23,15 @@ env:
 jobs:
   test-release:
     name: Test Release
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Only on main
         if: |
           github.ref != 'refs/heads/main'
-        shell: pwsh
+        shell: bash
         run: |
           echo "Only to be executed on main"
           exit 1
-
-      - name: Disable autocrlf
-        shell: pwsh
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
 
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -53,17 +51,17 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-cocogitto
+          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-git-cliff
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
             ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
 
       - name: Set up toolchain
-        shell: pwsh
+        shell: bash
         run: |
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rust-analyzer.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt.exe
+          rm ${HOME}/.cargo/bin/cargo-fmt
+          rm ${HOME}/.cargo/bin/rust-analyzer
+          rm ${HOME}/.cargo/bin/rustfmt
 
           rustup self update
           rustup update
@@ -73,39 +71,45 @@ jobs:
           cargo --version
 
       - name: Get binstall
-        shell: pwsh
-        working-directory: ${{ env.TEMP }}
+        shell: bash
+        working-directory: /tmp
         run: |
-          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
-          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
+          archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
+          wget \
+            --output-document=- \
+            --timeout=10 \
+            --waitretry=3 \
+            --retry-connrefused \
+            --progress=dot:mega \
+            "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" \
+            | tar \
+                --directory=${HOME}/.cargo/bin/ \
+                --strip-components=0 \
+                --no-overwrite-dir \
+                --extract \
+                --verbose \
+                --gunzip \
+                --file=-
 
-          Expand-Archive  "./${archive}" -DestinationPath .
-
-          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
-
-          Move-Item -Force ./cargo-binstall.exe ~/.cargo/bin/
-
-      - name: Install cocogitto to get the next version number
-        shell: pwsh
+      - name: Install git-cliff to generate changelog & next version number
+        shell: bash
         run: |
-          cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm cocogitto --pkg-url "{ repo }/releases/download/{ version }/{ name }-{ version }-{ target }.tar.gz" --bin-dir "{ target }/{ bin }{ binary-ext }" --target x86_64-unknown-linux-musl --pkg-fmt tgz --bin cog --strategies crate-meta-data
+          cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm git-cliff
 
-      - name: Bump
-        shell: pwsh
+      - name: Generate the changelog representing the next release
+        shell: bash
         id: release
         run: |
-          git config --global user.name github-actions
-          git config --global user.email github-actions@github.com
+          repository=${{ github.repository }}
+          # split at the last / and keep that (kristof-mattei/repo-name -> repo-name)
+          repository=${repository##*/}
 
-          cog bump --auto
+          version=$(git-cliff --bumped-version --unreleased --github-token ${{ secrets.GITHUB_TOKEN }})
+          echo "version=$version" >> ${GITHUB_OUTPUT}
 
-          $version = "v$(cog -v get-version)"
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
+          commit_message="chore(release): Release ${version}"
 
-          cog changelog --at $version > GITHUB_CHANGELOG.md
+          git-cliff --output diff-CHANGELOG.md --bump --unreleased --latest --with-commit "${commit_message}" --github-token ${{ secrets.GITHUB_TOKEN }}
 
-          Write-Host "New version: $version"
-
-          echo "Changelog: "
-
-          cat GITHUB_CHANGELOG.md
+          echo "# Next release changelog:" >> ${GITHUB_STEP_SUMMARY}
+          cat diff-CHANGELOG.md >> ${GITHUB_STEP_SUMMARY}
