@@ -56,4 +56,4 @@ jobs:
       - name: Check the commits
         shell: pwsh
         run: |
-          cog check
+          cog check --ignore-merge-commits

@@ -153,31 +153,16 @@ jobs:
 
           Move-Item -Force ./cargo-binstall.exe ~/.cargo/bin/
 
-      - name: Install cocogitto to get the next version number
+      - name: Install git-cliff to generate changelog & next version number
         shell: pwsh
         run: |
-          cargo binstall \
-            --github-token ${{ secrets.GITHUB_TOKEN }} \
-            --no-confirm cocogitto \
-            --pkg-url "{ repo }/releases/download/{ version }/{ name }-{ version }-{ target }.tar.gz" \
-            --bin-dir "{ target }/{ bin }{ binary-ext }" \
-            --target x86_64-unknown-linux-musl \
-            --pkg-fmt tgz \
-            --bin cog \
-            --strategies crate-meta-data
+          cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm git-cliff
 
       - name: Calculate next version
         shell: pwsh
         id: version
         run: |
-          $version = (cog bump --auto --dry-run).Trim()
-
-          if ($version -match '^v\d+\.\d+\.\d+$') {
-              Write-Host "New version: $version"
-          } else {
-              $version = "v$(cog -v get-version)"
-              Write-Host "No version generated, defaulting to latest tag: $version"
-          }
+          $version=(git-cliff --bumped-version --unreleased --github-token ${{ secrets.GITHUB_TOKEN }})
 
           # remove v
           $version = $version -replace 'v', ''
