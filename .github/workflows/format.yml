@@ -46,4 +46,4 @@ jobs:
       - name: Run Prettier
         shell: pwsh
         run: |
-          pnpm prettier --check .
+          pnpm prettier --list-different .
