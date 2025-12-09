@@ -491,7 +491,7 @@ jobs:
           echo "unique_tag=${unique_tag}" >> ${GITHUB_OUTPUT}
 
       - name: Run Clippy for GitHub Actions report
-        uses: actions-rs-plus/clippy-check@28e4518e817a6d0fb772871073f78b72ba5051be
+        uses: actions-rs-plus/clippy-check@3cdfce3c54e442afeeaad8f4c2ade25106bb8da5
         with:
           daemon-config: |
             {
