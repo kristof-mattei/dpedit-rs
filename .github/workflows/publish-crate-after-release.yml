@@ -117,6 +117,8 @@ jobs:
           # store
           cargo set-version $version
 
+          git diff
+
           # debug
           Get-Content -Path Cargo.toml
 
