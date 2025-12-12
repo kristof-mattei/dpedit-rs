@@ -21,14 +21,8 @@ env:
 jobs:
   lint:
     name: Lint
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
-      - name: Disable autocrlf
-        shell: pwsh
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
-
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
@@ -36,24 +30,32 @@ jobs:
           fetch-depth: 0
 
       - name: Get binstall
-        shell: pwsh
-        working-directory: ${{ env.TEMP }}
+        shell: bash
+        working-directory: /tmp
         run: |
-          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
-          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
-
-          Expand-Archive  "./${archive}" -DestinationPath .
-
-          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
-
-          Move-Item -Force ./cargo-binstall.exe ~/.cargo/bin/
+          archive="cargo-binstall-x86_64-unknown-linux-musl.tgz"
+          wget \
+            --output-document=- \
+            --timeout=10 \
+            --waitretry=3 \
+            --retry-connrefused \
+            --progress=dot:mega \
+            "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" \
+            | tar \
+                --directory=${HOME}/.cargo/bin/ \
+                --strip-components=0 \
+                --no-overwrite-dir \
+                --extract \
+                --verbose \
+                --gunzip \
+                --file=-
 
       - name: Install cocogitto to get the next version number
-        shell: pwsh
+        shell: bash
         run: |
           cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm cocogitto --pkg-url "{ repo }/releases/download/{ version }/{ name }-{ version }-{ target }.tar.gz" --bin-dir "{ target }/{ bin }{ binary-ext }" --target x86_64-unknown-linux-musl --pkg-fmt tgz --bin cog --strategies crate-meta-data
 
       - name: Check the commits
-        shell: pwsh
+        shell: bash
         run: |
           cog check --ignore-merge-commits

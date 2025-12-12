@@ -65,20 +65,13 @@ jobs:
 
   changes:
     name: Detect changes
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
-      - &disable_autocrlf
-        name: Disable autocrlf
-        shell: pwsh
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
-
       - &checkout
         name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -94,7 +87,7 @@ jobs:
 
   calculate-version:
     name: Calculate version
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     needs:
@@ -107,12 +100,6 @@ jobs:
       fromJSON(needs.repo-has-container.outputs.has_container) == true &&
       fromJSON(needs.changes.outputs.code) == true
     steps:
-      - name: Disable autocrlf
-        shell: pwsh
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
-
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
@@ -144,11 +131,11 @@ jobs:
 
       - &set_up_toolchain
         name: Set up toolchain
-        shell: pwsh
+        shell: bash
         run: |
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rust-analyzer.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt.exe
+          rm ${HOME}/.cargo/bin/cargo-fmt
+          rm ${HOME}/.cargo/bin/rust-analyzer
+          rm ${HOME}/.cargo/bin/rustfmt
 
           rustup self update
           rustup update
@@ -159,51 +146,61 @@ jobs:
 
       - &get_binstall
         name: Get binstall
-        shell: pwsh
-        working-directory: ${{ env.TEMP }}
+        shell: bash
+        working-directory: /tmp
         run: |
-          $full_platform = switch ("${{ runner.arch }}") {
-            "X64" { "x86_64" }
-            "ARM64" { "aarch64" }
-          }
+          case ${{ runner.arch }} in
+            X64)
+              full_platform="x86_64"
+              ;;
+            ARM64)
+              full_platform="aarch64"
+              ;;
+          esac
 
-          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
-          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
-
-          Expand-Archive  "./${archive}" -DestinationPath .
-
-          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
-
-          Move-Item -Force ./cargo-binstall.exe ~/.cargo/bin/
+          archive="cargo-binstall-${full_platform}-unknown-linux-musl.tgz"
+          wget \
+            --output-document=- \
+            --timeout=10 \
+            --waitretry=3 \
+            --retry-connrefused \
+            --progress=dot:mega \
+            "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" \
+            | tar \
+                --directory=${HOME}/.cargo/bin/ \
+                --strip-components=0 \
+                --no-overwrite-dir \
+                --extract \
+                --verbose \
+                --gunzip \
+                --file=-
 
       - name: Install git-cliff to generate changelog & next version number
-        shell: pwsh
+        shell: bash
         run: |
           cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm git-cliff
 
       - name: Calculate next version
-        shell: pwsh
+        shell: bash
         id: version
         run: |
-          $version=(git-cliff --bumped-version --unreleased --github-token ${{ secrets.GITHUB_TOKEN }})
+          version=$(git-cliff --bumped-version --unreleased --github-token ${{ secrets.GITHUB_TOKEN }})
 
           # remove v
-          $version = $version -replace 'v', ''
+          version="${version//v/}"
 
           # store
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$version"
+          echo "version=${VERSION}" >> ${GITHUB_OUTPUT}
 
   cargo-build:
     name: Cargo build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs:
       - changes
     if: |
       github.event_name == 'pull_request' &&
       fromJSON(needs.changes.outputs.code) == true
     steps:
-      - *disable_autocrlf
-
       - *checkout
 
       - *cache_cargo
@@ -226,21 +223,19 @@ jobs:
       - *set_up_toolchain
 
       - name: Build
-        shell: pwsh
+        shell: bash
         run: |
           cargo build ${{ env.CARGO_FEATURES }} --all-targets --locked --workspace --verbose
 
   cargo-fmt:
     name: Cargo fmt
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs:
       - changes
     if: |
       github.event_name == 'pull_request' &&
       fromJSON(needs.changes.outputs.code) == true
     steps:
-      - *disable_autocrlf
-
       - *checkout
 
       - *cache_cargo
@@ -250,7 +245,7 @@ jobs:
       - *set_up_toolchain
 
       - name: Install rustfmt
-        shell: pwsh
+        shell: bash
         run: |
           rustup component add rustfmt
 
@@ -258,21 +253,19 @@ jobs:
           rustup update
 
       - name: Check formatting
-        shell: pwsh
+        shell: bash
         run: |
           cargo fmt --all -- --check --verbose
 
   cargo-test-and-report:
     name: Cargo test (and report)
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       checks: write
       contents: read
       id-token: write
       pull-requests: write
     steps:
-      - *disable_autocrlf
-
       - *checkout
 
       - *cache_cargo
@@ -284,7 +277,7 @@ jobs:
       - *set_up_toolchain
 
       - name: Install llvm-tools
-        shell: pwsh
+        shell: bash
         run: |
           rustup component add llvm-tools
 
@@ -294,12 +287,12 @@ jobs:
       - *get_binstall
 
       - name: Install nextest, custom test runner, with native support for junit and grcov
-        shell: pwsh
+        shell: bash
         run: |
           cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm cargo-nextest grcov
 
       - name: Build with instrumentation support
-        shell: pwsh
+        shell: bash
         env:
           RUSTFLAGS: "${{ env.RUSTFLAGS }} --allow=warnings -Cinstrument-coverage"
           # build-* ones are not parsed by grcov
@@ -308,7 +301,7 @@ jobs:
           cargo build ${{ env.CARGO_FEATURES }} --all-targets --locked --workspace --verbose
 
       - name: Run nextest
-        shell: pwsh
+        shell: bash
         id: tests
         env:
           RUSTFLAGS: "${{ env.RUSTFLAGS }} --allow=warnings -Cinstrument-coverage"
@@ -318,7 +311,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload test results
-        uses: EnricoMi/publish-unit-test-result-action/windows@34d7c956a59aed1bfebf31df77b8de55db9bbaaf # v2.21.0
+        uses: EnricoMi/publish-unit-test-result-action@34d7c956a59aed1bfebf31df77b8de55db9bbaaf # v2.21.0
         with:
           check_name: Test results
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -326,16 +319,16 @@ jobs:
             reports/results.xml
 
       - name: Run grcov
-        shell: pwsh
+        shell: bash
         run: |
-          grcov $(Get-ChildItem -Recurse -Filter '*.profraw' -Path . | % { $_.FullName }) `
-            --binary-path ./target/debug/ `
-            --branch `
-            --ignore-not-existing `
-            --keep-only "src/**" `
-            --llvm `
-            --output-path ./reports/lcov.info `
-            --output-type lcov `
+          grcov $(find . -name "profile-*.profraw" -print) \
+            --binary-path ./target/debug/ \
+            --branch \
+            --ignore-not-existing \
+            --keep-only "src/**" \
+            --llvm \
+            --output-path ./reports/lcov.info \
+            --output-type lcov \
             --source-dir .
 
       - name: Upload coverage results (to Codecov.io)
@@ -359,7 +352,7 @@ jobs:
           use_oidc: true
 
       - name: Fail if tests failed
-        shell: pwsh
+        shell: bash
         if: |
           steps.tests.outcome != 'success'
         run: |
@@ -372,15 +365,13 @@ jobs:
 
   cargo-clippy-and-report:
     name: Cargo clippy (and report)
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs:
       - changes
     if: |
       github.event_name == 'pull_request' &&
       fromJSON(needs.changes.outputs.code) == true
     steps:
-      - *disable_autocrlf
-
       - *checkout
 
       - *cache_cargo
@@ -396,8 +387,8 @@ jobs:
         with:
           args: ${{ env.CARGO_FEATURES }} --all-targets --locked --workspace --verbose
 
-  pre-build-cargo-edit-cargo-get:
-    name: Pre-build cargo-edit and cargo-get for ${{ matrix.runs-on }} for caching purposes
+  pre-build-cargo-edit:
+    name: Pre-build cargo-edit for ${{ matrix.runs-on }} for caching purposes
     strategy:
       matrix:
         runs-on:
@@ -408,10 +399,20 @@ jobs:
       - repo-has-container
     if: fromJSON(needs.repo-has-container.outputs.has_container) == true
     steps:
-      - name: SKip
+      - *checkout
+
+      - *cache_cargo
+
+      - *set_up_mold
+
+      - *set_up_toolchain
+
+      - *get_binstall
+
+      - name: Install cargo-edit to do set-version
         shell: bash
         run: |
-          echo "Does not apply on Windows"
+          cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm cargo-edit
 
   # this name is also used in `publish-crate-after-release.yml`
   docker-build:
@@ -436,13 +437,11 @@ jobs:
     needs:
       - calculate-version
       - architectures
-      # ensures cache of cargo-edit and cargo-get
-      - pre-build-cargo-edit-cargo-get
+      # ensures cache of cargo-edit
+      - pre-build-cargo-edit
     # if:
     # ... is not needed because calculate-version will not run if we disable building the docker container
     steps:
-      - *disable_autocrlf
-
       - *checkout
 
       - name: Cache cargo
@@ -458,10 +457,10 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
           key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-${{ github.job }}
-          # deviation from standard `*cache_cargo`, we want the cache from `pre-build-cargo-edit-cargo-get`
+          # deviation from standard `*cache_cargo`, we want the cache from `pre-build-cargo-edit`
           # as that one pre-builds it for us
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-pre-build-cargo-edit-cargo-get
+            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-pre-build-cargo-edit
             ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
             ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
 
@@ -471,15 +470,17 @@ jobs:
 
       - *get_binstall
 
-      - name: Install cargo-edit to do set-version, and cargo-get to get the description
+      - name: Install cargo-edit to do set-version
         shell: bash
         run: |
-          cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm cargo-edit cargo-get
+          cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm cargo-edit
 
       - name: Set the Cargo.toml version before we copy in the data into the Docker container
         shell: bash
         run: |
           cargo set-version ${{ needs.calculate-version.outputs.version }}
+
+          git diff
 
       # TODO validate no changes between github.event.pull_request.head.sha and the actual current sha (representing the hypothetical merge)
       - name: Set variables
@@ -523,7 +524,7 @@ jobs:
           echo "full_image_name_local_registry=${local_registry}/${image_name}" >> ${GITHUB_OUTPUT}
 
           # The application's description, from Cargo.toml
-          description=$(cargo get package.description)
+          description=$(cargo metadata --format-version 1 --no-deps | jq ".packages.[] | select(.name == \"${application_name}\") | .description" --raw-output)
           echo "description=${description}" >> ${GITHUB_OUTPUT}
 
       - name: Set up Docker
@@ -595,7 +596,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         if: |
-          matrix.runs-on == 'windows-latest'
+          matrix.runs-on == 'ubuntu-latest'
         with:
           if-no-files-found: error
           name: container-${{ steps.variables.outputs.application_name }}-${{ steps.variables.outputs.platform_no_slashes }}
@@ -604,7 +605,7 @@ jobs:
 
   docker-publish:
     name: Publish Docker container
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     services:
       registry:
         image: registry:3@sha256:cd92709b4191c5779cd7215ccd695db6c54652e7a62843197e367427efb84d0e
