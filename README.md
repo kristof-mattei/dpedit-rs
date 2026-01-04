@@ -1,6 +1,6 @@
 # DPEdit-rs 0.0.1
 
-# Inspired by https://github.com/programmer2514/DPEdit, rewritten in Rust because I like Rust
+# Inspired by <https://github.com/programmer2514/DPEdit>, rewritten in Rust because I like Rust
 
 DPEdit is a simple command line utility to accurately set the relative position of displays in a dual- or multi-monitor setup.
 
@@ -18,8 +18,8 @@ dpedit.exe <displayNum> <xPos> <yPos> [<displayNum2> <xPos2> <yPos2>] ...
 
 `<yPos>` is the Y, or vertical, position, in pixels, of the top-left corner of display `<displayNum>`.
 
-NOTE: Display #1 remains at position {0, 0} at all times. Specifying its location at all is entirely optional.
-If its location is set (E.G. on a single-monitor system), the wallpaper will be offset accordingly. However, it will still be at position {0, 0}.
+NOTE: Display #1 remains at position `{0, 0}` at all times. Specifying its location at all is entirely optional.
+If its location is set (E.G. on a single-monitor system), the wallpaper will be offset accordingly. However, it will still be at position `{0, 0}`.
 
 ## Examples
 
@@ -35,8 +35,8 @@ If its location is set (E.G. on a single-monitor system), the wallpaper will be 
 > ./dpedit.exe 1 0 0 2 -1920 21
 > ```
 
-Moves Display #1 to coords {0, 0} and positions Display #2 to the left of
-and 21 pixels lower than Display #1 (coords {-1920, 21}).
+Moves Display #1 to coords `{0, 0}` and positions Display #2 to the left of
+and 21 pixels lower than Display #1 (coords `{-1920, 21}`).
 This example assumes Display #2 to be 1080p.
 
 Results in the following monitor configuration:
@@ -57,7 +57,7 @@ Results in the following monitor configuration:
 > ./dpedit.exe 2 0 1080
 > ```
 
-Assuming Display #1 is at coords {0, 0}, positions Display #2 below Display #1 (coords {0, 1080}).
+Assuming Display #1 is at coords `{0, 0}`, positions Display #2 below Display #1 (coords `{0, 1080}`).
 This example assumes Display #1 to be 1080p.
 
 Results in the following monitor configuration:

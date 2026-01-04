@@ -18,6 +18,9 @@ windows = { version = "0.62.2", features = [
     "Win32_UI_WindowsAndMessaging",
 ] }
 
+[package.metadata.spellcheck]
+config = "spellcheck.toml"
+
 [lints.clippy]
 # don't stop from compiling / running
 all = "warn"
