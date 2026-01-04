@@ -29,7 +29,7 @@ If its location is set (E.G. on a single-monitor system), the wallpaper will be 
 > dpedit.exe 1 0 0 2 -1920 21
 > ```
 >
-> Powershell (Windows Terminal):
+> PowerShell (Windows Terminal):
 >
 > ```
 > ./dpedit.exe 1 0 0 2 -1920 21
@@ -51,7 +51,7 @@ Results in the following monitor configuration:
 > dpedit.exe 2 0 1080
 > ```
 >
-> Powershell (Windows Terminal):
+> PowerShell (Windows Terminal):
 >
 > ```
 > ./dpedit.exe 2 0 1080
