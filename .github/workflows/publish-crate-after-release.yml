@@ -53,58 +53,10 @@ jobs:
         with:
           show-progress: false
 
-      - name: Cache cargo
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
-        env:
-          CACHE_NAME: cargo
-        with:
-          path: |
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          # notice the `docker-build` suffix, so that it will use the same cache
-          key: ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-docker-build
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('Cargo.lock') }}-
-            ${{ runner.os }}-${{ runner.arch }}-build-${{ env.CACHE_NAME }}-
-
-      - name: Set up mold
-        uses: rui314/setup-mold@725a8794d15fc7563f59595bd9556495c0564878 # v1
-
-      - name: Set up toolchain
-        shell: pwsh
-        run: |
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/cargo-fmt.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rust-analyzer.exe
-          Remove-Item -ErrorAction SilentlyContinue ${HOME}/.cargo/bin/rustfmt.exe
-
-          rustup self update
-          rustup update
-          rustup show active-toolchain || rustup toolchain install
-          rustup show
-
-          cargo --version
-
-      - name: Get binstall
-        shell: pwsh
-        working-directory: ${{ env.TEMP }}
-        run: |
-          $archive="cargo-binstall-x86_64-pc-windows-msvc.zip"
-          Invoke-WebRequest "https://github.com/cargo-bins/cargo-binstall/releases/latest/download/${archive}" -OutFile "${archive}"
-
-          Expand-Archive  "./${archive}" -DestinationPath .
-
-          Remove-Item -ErrorAction SilentlyContinue "./${archive}"
-
-          Move-Item -Force ./cargo-binstall.exe ~/.cargo/bin/
-
       - name: Install cargo-edit to do set-version
-        shell: pwsh
-        run: |
-          cargo binstall --github-token ${{ secrets.GITHUB_TOKEN }} --no-confirm cargo-edit
+        uses: taiki-e/install-action@cc33365ec7e3350bc47bf935f247582cc6f68344 # v2.65.12
+        with:
+          tool: cargo-edit
 
       - name: Set version in Cargo.toml / Cargo.lock
         shell: pwsh
