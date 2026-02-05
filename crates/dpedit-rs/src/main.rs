@@ -12,8 +12,10 @@
 // * Credit to LB_ for the basic methods used in this utility.
 // * Credit to GreenYun for the /L routine, and for correcting my mistaken understanding of display indices
 // */
+mod build_env;
 mod win32;
 
+use build_env::get_build_env;
 use windows::Win32::Graphics::Gdi::{
     DISPLAY_DEVICE_ACTIVE, DISPLAY_DEVICE_MIRRORING_DRIVER, DISPLAY_DEVICE_MODESPRUNED,
     DISPLAY_DEVICE_PRIMARY_DEVICE, DISPLAY_DEVICE_REMOVABLE, DISPLAY_DEVICE_VGA_COMPATIBLE,
@@ -23,7 +25,24 @@ use windows::core::PCWSTR;
 
 use crate::win32::{get_display_device, get_display_settings, get_display_x_y_position};
 
+fn print_header() {
+    const NAME: &str = env!("CARGO_PKG_NAME");
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+    let build_env = get_build_env();
+
+    println!(
+        "{} v{} - built for {} ({})",
+        NAME,
+        VERSION,
+        build_env.get_target(),
+        build_env.get_target_cpu().unwrap_or("base cpu variant"),
+    );
+}
+
 fn main() {
+    print_header();
+
     let args = std::env::args().collect::<Vec<_>>();
 
     if let Some(first) = args.get(1) {
@@ -80,7 +99,7 @@ fn set_positions(args: &[String]) {
         println!("Applying position {{{x_pos}, {y_pos}}} to Display #{display_index}...");
 
         match set_display_settings(display_index, x_pos, y_pos) {
-            Err(e) => println!("{e}\nSkipping...\n"),
+            Err(error) => println!("{error}\nSkipping...\n"),
             _ => println!("Done!"),
         }
     }
