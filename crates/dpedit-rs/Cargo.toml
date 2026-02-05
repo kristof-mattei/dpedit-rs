@@ -23,7 +23,7 @@ windows = { version = "0.62.2", features = [
 ] }
 
 [dev-dependencies]
-pretty_assertions = "1.4.1"
+pretty_assertions = "=1.4.1"
 
 [lints]
 workspace = true
