@@ -153,8 +153,6 @@ jobs:
 
       - *cache_cargo
 
-      - *set_up_mold
-
       - *set_up_toolchain
 
       - name: Install rustfmt
@@ -228,7 +226,7 @@ jobs:
       - name: Upload test results
         uses: EnricoMi/publish-unit-test-result-action/windows@27d65e188ec43221b20d26de30f4892fad91df2f # v2.22.0
         with:
-          check_name: Test results
+          check_name: Test results for Rust
           github_token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             reports/results.xml
@@ -287,6 +285,7 @@ jobs:
     runs-on: windows-latest
     needs:
       - changes
+      - warm-up-cache
     if: |
       github.event_name == 'pull_request' &&
       fromJSON(needs.changes.outputs.rust) == true
