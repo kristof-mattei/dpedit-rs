@@ -19,7 +19,7 @@ env:
 jobs:
   repo-has-crate:
     name: Repo publishes crate?
-    runs-on: windows-latest
+    runs-on: ubuntu-slim
     outputs:
       has_crate: ${{ steps.determine.outputs.has_crate }}
 
