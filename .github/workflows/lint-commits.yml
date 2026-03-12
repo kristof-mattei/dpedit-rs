@@ -22,6 +22,7 @@ jobs:
   lint:
     name: Lint
     runs-on: windows-latest
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     steps:
       - name: Disable autocrlf
         shell: pwsh
