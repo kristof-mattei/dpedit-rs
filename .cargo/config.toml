@@ -1,2 +1,5 @@
 [target.aarch64-unknown-linux-musl]
 linker = "aarch64-linux-gnu-gcc"
+
+[target.'cfg(target_os = "linux")']
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
