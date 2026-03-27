@@ -107,11 +107,7 @@ jobs:
     name: Cargo build
     runs-on: windows-latest
     needs:
-      - changes
       - warm-up-cache
-    if: |
-      github.event_name == 'pull_request' &&
-      fromJSON(needs.changes.outputs.rust) == true
     steps:
       - *disable_autocrlf
 
