@@ -57,6 +57,7 @@ jobs:
       checks: write
       contents: read
       id-token: write
+      issues: read
       pull-requests: write
 
   repo-has-container:
@@ -139,6 +140,8 @@ jobs:
       - name: Calculate next version
         shell: pwsh
         id: version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $latest_tag = git describe --tags --abbrev=0 2>$null
           $bumped = git-cliff --bumped-version --unreleased --github-token $env:GITHUB_TOKEN

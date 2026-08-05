@@ -20,17 +20,17 @@ env:
 jobs:
   repo-has-crate:
     name: Repo publishes crate?
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
     outputs:
       has_crate: ${{ steps.determine.outputs.has_crate }}
 
     steps:
       - name: Repo has crate?
         id: determine
-        shell: pwsh
+        shell: bash
         run: |
           has_crate="${{ vars.HAS_CRATE }}"
-          echo "has_crate=${has_crate:-false}" >> ${GITHUB_OUTPUT}
+          echo "has_crate=${has_crate:-false}" >> "${GITHUB_OUTPUT}"
 
   publish-crate:
     name: Publish crate
