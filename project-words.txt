@@ -3,9 +3,9 @@ appgroup
 appuser
 bkeepers
 buildcache
-Cinstrument
+cinstrument
 cocogitto
-Ctarget
+ctarget
 cttc
 cves
 DEVICEW
@@ -21,6 +21,7 @@ idents
 kristof
 lldb
 mattei
+mimalloc
 MODESPRUNED
 monomorphization
 multiplatform
@@ -33,9 +34,10 @@ Pels
 postprocessors
 prereleased
 profraw
+pyflakes
 RAWMODE
-Retag
-Retagging
+retag
+retagging
 rustflags
 samply
 sccache
@@ -43,9 +45,9 @@ skopeo
 startswith
 striptags
 taiki
-TARGETPLATFORMDASH
+targetplatformdash
 telem
-Tera
+tera
 topo
 trixie
 uninlined
