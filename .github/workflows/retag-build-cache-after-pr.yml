@@ -72,8 +72,8 @@ jobs:
     strategy:
       matrix:
         runs-on:
-          - "ubuntu-latest"
-          - "ubuntu-24.04-arm"
+          - "ubuntu-26.04"
+          - "ubuntu-26.04-arm"
         platform: ${{ fromJSON(needs.architectures.outputs.architectures) }}
     runs-on: ${{ matrix.runs-on }}
     needs:
