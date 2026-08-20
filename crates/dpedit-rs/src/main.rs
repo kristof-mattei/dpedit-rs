@@ -91,7 +91,7 @@ fn show_help() {
 }
 
 fn set_positions(args: &[String]) {
-    for chunk in args[1..].chunks_exact(3) {
+    for chunk in args[1..].as_chunks::<3>().0 {
         let display_index = chunk[0].parse::<u32>().unwrap() - 1;
         let x_pos = chunk[1].parse().unwrap();
         let y_pos = chunk[2].parse().unwrap();
