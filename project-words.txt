@@ -4,6 +4,7 @@ artipacked
 bkeepers
 buildcache
 cinstrument
+cliffignore
 ctarget
 cttc
 cves
@@ -18,12 +19,10 @@ grcov
 hubot
 idents
 kristof
-lldb
 mattei
 modespruned
 monomorphization
 multiplatform
-mypy
 nextest
 pathbuf
 pcwstr
@@ -32,6 +31,7 @@ postprocessors
 prereleased
 profraw
 pyflakes
+rawfile
 rawmode
 retag
 retagging
@@ -41,6 +41,7 @@ samply
 sccache
 skopeo
 skopeo's
+slurpfile
 startswith
 striptags
 taiki
