@@ -48,7 +48,7 @@ jobs:
 
   cargo-build:
     name: Cargo build
-    runs-on: windows-latest
+    runs-on: windows-2025
     steps:
       - *disable_autocrlf
 
@@ -87,7 +87,7 @@ jobs:
 
   cargo-fmt:
     name: Cargo fmt
-    runs-on: windows-latest
+    runs-on: windows-2025
     needs:
       - changes
     if: |
@@ -115,7 +115,7 @@ jobs:
 
   cargo-test-and-report:
     name: Cargo test (and report)
-    runs-on: windows-latest
+    runs-on: windows-2025
     permissions:
       checks: write # publish-unit-test-result-action creates a check run
       contents: read
@@ -252,7 +252,7 @@ jobs:
 
   cargo-clippy-and-report:
     name: Cargo clippy (and report)
-    runs-on: windows-latest
+    runs-on: windows-2025
     needs:
       - changes
     if: |
