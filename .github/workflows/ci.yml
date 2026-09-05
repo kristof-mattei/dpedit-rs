@@ -149,7 +149,7 @@ jobs:
 
   changes:
     name: Detect changes
-    runs-on: windows-latest
+    runs-on: windows-2025
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     permissions:
       contents: read
@@ -181,7 +181,7 @@ jobs:
 
   calculate-version:
     name: Calculate version
-    runs-on: windows-latest
+    runs-on: windows-2025
     permissions:
       contents: read
     needs:
