@@ -19,6 +19,7 @@ grcov
 hubot
 idents
 kristof
+lintian
 mattei
 modespruned
 monomorphization
