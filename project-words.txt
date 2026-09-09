@@ -24,6 +24,7 @@ modespruned
 monomorphization
 multiplatform
 nextest
+oras
 pathbuf
 pcwstr
 pels
