@@ -30,6 +30,7 @@ oras
 pathbuf
 pcwstr
 pels
+pkgs
 postprocessors
 prereleased
 profraw
@@ -52,6 +53,7 @@ targetplatformdash
 telem
 tera
 topo
+tostring
 trixie
 trunc
 uninlined
