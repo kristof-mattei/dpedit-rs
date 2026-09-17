@@ -8,7 +8,6 @@ cinstrument
 cliffignore
 ctarget
 cttc
-cves
 devicew
 devmodew
 dorny
@@ -32,7 +31,6 @@ pcwstr
 pels
 pkgs
 postprocessors
-prereleased
 profraw
 pyflakes
 rawfile
