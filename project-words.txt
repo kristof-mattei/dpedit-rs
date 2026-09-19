@@ -23,6 +23,7 @@ lintian
 mattei
 modespruned
 monomorphization
+msvc
 multiplatform
 nextest
 oras
