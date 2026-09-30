@@ -21,6 +21,7 @@ idents
 kristof
 lintian
 mattei
+mkhl
 modespruned
 monomorphization
 msvc
